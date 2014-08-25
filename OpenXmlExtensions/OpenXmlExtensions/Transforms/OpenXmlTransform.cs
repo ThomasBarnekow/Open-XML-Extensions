@@ -26,8 +26,6 @@ using System.IO.Packaging;
 using System.Xml.Linq;
 
 using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Transforms.Extensions;
-using OpenXmlPowerTools;
 
 namespace DocumentFormat.OpenXml.Transforms
 {
@@ -64,7 +62,7 @@ namespace DocumentFormat.OpenXml.Transforms
             if (document == null)
                 return null;
 
-            return FlatOpc.OpcToFlatOpc(document);
+            return FlatOpcTransform.ToFlatOpc(document);
         }
 
         public static WordprocessingDocument ToWordprocessingDocument(string xml)
@@ -83,7 +81,7 @@ namespace DocumentFormat.OpenXml.Transforms
             // Write OPC document to memory stream.
             MemoryStream stream = new MemoryStream();
             using (Package package = Package.Open(stream, FileMode.Create))
-                FlatOpc.FlatOpcToOpc(document, package);
+                FlatOpcTransform.ToOpc(document, package);
 
             // Create editable WordprocessingDocument from memory stream.
             return WordprocessingDocument.Open(stream, true);

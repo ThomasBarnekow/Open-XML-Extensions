@@ -1,24 +1,25 @@
-﻿/***************************************************************************
-
-Copyright (c) Microsoft Corporation 2012-2013.
-Copyright (c) Thomas Barnekow 2014.
-
-This code is licensed using the Microsoft Public License (Ms-PL).  The text of the license can be found here:
-
-http://www.microsoft.com/resources/sharedsource/licensingbasics/publiclicense.mspx
-
-Published at http://OpenXmlDeveloper.org
-Resource Center and Documentation: http://openxmldeveloper.org/wiki/w/wiki/powertools-for-open-xml.aspx
-
-Developer: Eric White (with extensions by Thomas Barnekow)
-Blog: http://www.ericwhite.com
-Twitter: @EricWhiteDev
-Email: eric@ericwhite.com
-
-Version 2.7.05
- * Moved enhanced FlatOpc class to FlatOpc.cs (Thomas Barnekow) 
-
-***************************************************************************/
+﻿/*
+ * FlatOpcTransform.cs - Transforming between OPC and Flat OPC formats
+ * 
+ * Copyright 2014 Thomas Barnekow
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ * Developer: Thomas Barnekow, with input from Eric White's MSDN blog posts
+ * Email: thomas<at/>barnekow<dot/>info
+ * 
+ * Version: 1.0.01
+ */
 
 using System;
 using System.IO;
@@ -30,13 +31,13 @@ using System.Xml.Linq;
 
 using DocumentFormat.OpenXml.Packaging;
 
-namespace OpenXmlPowerTools
+namespace DocumentFormat.OpenXml.Transforms
 {
     /// <summary>
     /// Provides a number of utility methods for working with OPC (Open Packaging
     /// Convention) formats.
     /// </summary>
-    public static class FlatOpc
+    public static class FlatOpcTransform
     {
         #region OPC to Flat OPC conversion
 
@@ -47,6 +48,8 @@ namespace OpenXmlPowerTools
         /// <returns>The corresponding <see cref="XElement"/></returns>
         private static XElement GetContentsAsXml(PackagePart part)
         {
+            // Author: Eric White. 
+            // Source code taken from MSDN blog post.
             XNamespace pkg = "http://schemas.microsoft.com/office/2006/xmlPackage";
 
             if (part.ContentType.EndsWith("xml"))
@@ -74,7 +77,7 @@ namespace OpenXmlPowerTools
                         .GroupBy(c => c.Chunk)
                         .Aggregate(
                             new StringBuilder(),
-                            (s, i) =>
+                            (s, i) => 
                                 s.Append(
                                     i.Aggregate(
                                         new StringBuilder(),
@@ -95,13 +98,13 @@ namespace OpenXmlPowerTools
         /// <summary>
         /// Processing instructions for Word document.
         /// </summary>
-        private static readonly XProcessingInstruction WordDocument =
+        private static readonly XProcessingInstruction WordDocument = 
             new XProcessingInstruction("mso-application", "progid=\"Word.Document\"");
 
         /// <summary>
         /// Processing instructions for PowerPoint document.
         /// </summary>
-        private static readonly XProcessingInstruction PowerPointShow =
+        private static readonly XProcessingInstruction PowerPointShow = 
             new XProcessingInstruction("mso-application", "progid=\"PowerPoint.Show\"");
 
         /// <summary>
@@ -113,14 +116,17 @@ namespace OpenXmlPowerTools
         /// <returns>The processing instruction element</returns>
         private static XProcessingInstruction GetProcessingInstruction(string fileName)
         {
+            // Author: Eric White (with refactoring by Thomas Barnekow)
+            // Source code taken from MSDN blog post.
+
             // Check extension and return processing instructions for Word documents
             if (fileName.ToLower().EndsWith(".docx"))
                 return WordDocument;
-
+            
             // Check extension and return processing instructions for PowerPoint presentation
             if (fileName.ToLower().EndsWith(".pptx"))
                 return PowerPointShow;
-
+            
             // Neither Word nor PowerPoint document
             return null;
         }
@@ -132,11 +138,12 @@ namespace OpenXmlPowerTools
         /// <param name="package">The package in OPC format</param>
         /// <param name="instruction">The processing instructions</param>
         /// <returns>The document in Flat OPC format</returns>
-        public static XDocument OpcToFlatOpc(Package package, XProcessingInstruction instruction)
+        public static XDocument ToFlatOpc(Package package, XProcessingInstruction instruction)
         {
+            // Author: Eric White (with refactoring by Thomas Barnekow)
+            // Source code taken from MSDN blog post.
             XNamespace pkg = "http://schemas.microsoft.com/office/2006/xmlPackage";
-
-            // Create new XDocument
+            
             XDocument doc =
                 new XDocument(
                     new XDeclaration("1.0", "UTF-8", "yes"),
@@ -146,7 +153,6 @@ namespace OpenXmlPowerTools
                         new XAttribute(XNamespace.Xmlns + "pkg", pkg.ToString()),
                         package.GetParts().Select(part => GetContentsAsXml(part))));
 
-            // Done
             return doc;
         }
 
@@ -158,7 +164,7 @@ namespace OpenXmlPowerTools
         /// <param name="openXmlPackage">The package in OPC format</param>
         /// <param name="instruction">The processing instructions</param>
         /// <returns>The package in Flat OPC format</returns>
-        public static XDocument OpcToFlatOpc(OpenXmlPackage openXmlPackage,
+        public static XDocument ToFlatOpc(OpenXmlPackage openXmlPackage, 
             XProcessingInstruction instruction)
         {
             if (openXmlPackage == null)
@@ -166,14 +172,17 @@ namespace OpenXmlPowerTools
 
             // Save root elements of all parts contained in document to their
             // respective package parts. 
-            foreach (OpenXmlPart part in openXmlPackage.GetAllParts())
+            //foreach (OpenXmlPart part in openXmlPackage.GetAllParts())
+            //    part.RootElement.Save();
+            //TODO: Refactor extension method GetAllParts()
+            foreach (OpenXmlPart part in openXmlPackage.GetPartsOfType<OpenXmlPart>())
                 part.RootElement.Save();
 
             // Save all parts to package.
             openXmlPackage.Package.Flush();
 
             // Convert package.
-            return FlatOpc.OpcToFlatOpc(openXmlPackage.Package, instruction);
+            return FlatOpcTransform.ToFlatOpc(openXmlPackage.Package, instruction);
         }
 
         /// <summary>
@@ -183,12 +192,12 @@ namespace OpenXmlPowerTools
         /// </summary>
         /// <param name="document">The document in OPC format</param>
         /// <returns>The document in Flat OPC format</returns>
-        public static XDocument OpcToFlatOpc(WordprocessingDocument document)
+        public static XDocument ToFlatOpc(WordprocessingDocument document)
         {
             if (document == null)
                 throw new ArgumentNullException("document");
 
-            return FlatOpc.OpcToFlatOpc(document, WordDocument);
+            return FlatOpcTransform.ToFlatOpc(document, WordDocument);
         }
 
         /// <summary>
@@ -198,12 +207,12 @@ namespace OpenXmlPowerTools
         /// </summary>
         /// <param name="document">The document in OPC format</param>
         /// <returns>The document in Flat OPC format</returns>
-        public static XDocument OpcToFlatOpc(PresentationDocument document)
+        public static XDocument ToFlatOpc(PresentationDocument document)
         {
             if (document == null)
                 throw new ArgumentNullException("document");
 
-            return FlatOpc.OpcToFlatOpc(document, PowerPointShow);
+            return FlatOpcTransform.ToFlatOpc(document, PowerPointShow);
         }
 
         /// <summary>
@@ -213,12 +222,12 @@ namespace OpenXmlPowerTools
         /// </summary>
         /// <param name="document">The document in OPC format</param>
         /// <returns>The document in Flat OPC format</returns>
-        public static XDocument OpcToFlatOpc(SpreadsheetDocument document)
+        public static XDocument ToFlatOpc(SpreadsheetDocument document)
         {
             if (document == null)
                 throw new ArgumentNullException("document");
 
-            return FlatOpc.OpcToFlatOpc(document, null);
+            return FlatOpcTransform.ToFlatOpc(document, null);
         }
 
         /// <summary>
@@ -226,10 +235,10 @@ namespace OpenXmlPowerTools
         /// </summary>
         /// <param name="path"></param>
         /// <returns></returns>
-        public static XDocument OpcToFlatOpc(string path)
+        public static XDocument ToFlatOpc(string path)
         {
             using (Package package = Package.Open(path))
-                return OpcToFlatOpc(package, GetProcessingInstruction(path));
+                return ToFlatOpc(package, GetProcessingInstruction(path));
         }
 
         #endregion OPC to Flat OPC conversion
@@ -242,8 +251,10 @@ namespace OpenXmlPowerTools
         /// </summary>
         /// <param name="doc">The document in Flat OPC format</param>
         /// <param name="package">The package in OPC format</param>
-        public static void FlatOpcToOpc(XDocument doc, Package package)
+        public static void ToOpc(XDocument doc, Package package)
         {
+            // Author: Eric White. 
+            // Source code taken from MSDN blog post.
             XNamespace pkg = "http://schemas.microsoft.com/office/2006/xmlPackage";
             XNamespace rel = "http://schemas.openxmlformats.org/package/2006/relationships";
 
@@ -345,10 +356,10 @@ namespace OpenXmlPowerTools
         /// </summary>
         /// <param name="doc">The document in Flat OPC format</param>
         /// <param name="path">The path of the file in OPC format</param>
-        public static void FlatOpcToOpc(XDocument doc, string path)
+        public static void ToOpc(XDocument doc, string path)
         {
             using (Package package = Package.Open(path, FileMode.Create))
-                FlatOpcToOpc(doc, package);
+                ToOpc(doc, package);
         }
 
         #endregion Flat OPC to OPC conversion
