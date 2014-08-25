@@ -28,6 +28,7 @@ using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 
+using DocumentFormat.OpenXml.Extensions;
 using DocumentFormat.OpenXml.Packaging;
 
 namespace OpenXmlPowerTools

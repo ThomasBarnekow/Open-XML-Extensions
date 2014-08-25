@@ -21,7 +21,9 @@
  * Version: 1.0.01
  */
 
-namespace DocumentFormat.OpenXml
+using DocumentFormat.OpenXml;
+
+namespace DocumentFormat.OpenXml.Extensions
 {
     /// <summary>
     /// Provides extension methods for <see cref="OpenXmlElement"/> class.

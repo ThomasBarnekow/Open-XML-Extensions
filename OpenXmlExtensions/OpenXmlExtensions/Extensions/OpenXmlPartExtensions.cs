@@ -25,8 +25,9 @@ using System.IO;
 using System.Xml;
 using System.Xml.Linq;
 
+using DocumentFormat.OpenXml.Packaging;
 
-namespace DocumentFormat.OpenXml.Packaging
+namespace DocumentFormat.OpenXml.Extensions
 {
     /// <summary>
     /// Provides extension methods for the <see cref="OpenXmlPart"/> class.

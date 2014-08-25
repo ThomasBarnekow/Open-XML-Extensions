@@ -24,8 +24,9 @@
 using System;
 
 using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Wordprocessing;
 
-namespace DocumentFormat.OpenXml.Wordprocessing
+namespace DocumentFormat.OpenXml.Extensions
 {
     /// <summary>
     /// 

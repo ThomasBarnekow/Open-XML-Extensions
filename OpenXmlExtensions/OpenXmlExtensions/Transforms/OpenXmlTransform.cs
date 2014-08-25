@@ -25,6 +25,7 @@ using System.IO;
 using System.IO.Packaging;
 using System.Xml.Linq;
 
+using DocumentFormat.OpenXml.Extensions;
 using DocumentFormat.OpenXml.Packaging;
 
 namespace DocumentFormat.OpenXml.Transforms

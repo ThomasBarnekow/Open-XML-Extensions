@@ -26,9 +26,10 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 
+using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 
-namespace DocumentFormat.OpenXml.Packaging
+namespace DocumentFormat.OpenXml.Extensions
 {
     /// <summary>
     /// Provides extension methods for <see cref="WordprocessingDocument"/> class.

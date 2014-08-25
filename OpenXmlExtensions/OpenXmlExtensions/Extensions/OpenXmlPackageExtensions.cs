@@ -22,8 +22,9 @@
  */
 
 using System.Collections.Generic;
+using DocumentFormat.OpenXml.Packaging;
 
-namespace DocumentFormat.OpenXml.Packaging
+namespace DocumentFormat.OpenXml.Extensions
 {
     /// <summary>
     /// Extensions for <see cref="OpenXmlPackage"/>.
