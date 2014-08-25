@@ -60,7 +60,6 @@
     <Compile Include="HtmlConverter.cs" />
     <Compile Include="ListItemRetriever.cs" />
     <Compile Include="MarkupSimplifier.cs" />
-    <Compile Include="OpenXmlPackageExtensions.cs" />
     <Compile Include="OpenXmlRegex.cs" />
     <Compile Include="PegBase.cs" />
     <Compile Include="PresentationBuilder.cs" />

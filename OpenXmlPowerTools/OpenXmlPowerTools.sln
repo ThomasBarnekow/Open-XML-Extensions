@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenXmlPowerTools", "OpenXmlPowerTools\OpenXmlPowerTools.csproj", "{0140AF12-8B0B-4724-8E3D-4D2C2B9055EB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenXmlExtensions", "..\OpenXmlExtensions\OpenXmlExtensions\OpenXmlExtensions.csproj", "{0FFBE211-D608-462A-9BA3-6EF51F801747}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -13,6 +15,10 @@ Global
 		{0140AF12-8B0B-4724-8E3D-4D2C2B9055EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0140AF12-8B0B-4724-8E3D-4D2C2B9055EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0140AF12-8B0B-4724-8E3D-4D2C2B9055EB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0FFBE211-D608-462A-9BA3-6EF51F801747}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0FFBE211-D608-462A-9BA3-6EF51F801747}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0FFBE211-D608-462A-9BA3-6EF51F801747}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0FFBE211-D608-462A-9BA3-6EF51F801747}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
