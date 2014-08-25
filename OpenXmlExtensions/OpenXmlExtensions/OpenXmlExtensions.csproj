@@ -45,6 +45,10 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="IO\OpenXmlMemoryStream.cs" />
+    <Compile Include="IO\PresentationMemoryStream.cs" />
+    <Compile Include="IO\SpreadsheetMemoryStream.cs" />
+    <Compile Include="IO\WordprocessingMemoryStream.cs" />
     <Compile Include="OpenXmlElementExtensions.cs" />
     <Compile Include="Packaging\OpenXmlPackageExtensions.cs" />
     <Compile Include="Packaging\OpenXmlPartExtensions.cs" />

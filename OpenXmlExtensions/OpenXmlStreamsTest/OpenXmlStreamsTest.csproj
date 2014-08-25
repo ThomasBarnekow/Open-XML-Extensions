@@ -2,15 +2,16 @@
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{CEE7B564-E51D-46D9-9DF8-70F806A2D68B}</ProjectGuid>
-    <OutputType>Library</OutputType>
+    <ProjectGuid>{4C94BEC8-1D97-4E38-8385-3A8D4FD92F6C}</ProjectGuid>
+    <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>OpenXmlPowerTools</RootNamespace>
-    <AssemblyName>OpenXmlPowerToolsExtensions</AssemblyName>
+    <RootNamespace>OOXMLStreamsTest</RootNamespace>
+    <AssemblyName>OOXMLStreamsTest</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
     <SccProjectName>
     </SccProjectName>
@@ -21,7 +22,8 @@
     <SccProvider>
     </SccProvider>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -30,7 +32,8 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -53,18 +56,28 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="PtMemoryStreamExtensions.cs" />
-    <Compile Include="PtMemoryStreamFactory.cs" />
+    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Document.docx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Presentation.pptx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Spreadsheet.xlsx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\..\OpenXmlPowerTools\OpenXmlPowerTools\OpenXmlPowerTools.csproj">
-      <Project>{9B244B69-E2BD-499E-AB7D-D46F21C2CE79}</Project>
+      <Project>{0140AF12-8B0B-4724-8E3D-4D2C2B9055EB}</Project>
       <Name>OpenXmlPowerTools</Name>
     </ProjectReference>
-    <ProjectReference Include="..\OpenXmlStreams\OpenXmlStreams.csproj">
-      <Project>{14813CD3-ADF2-4C77-B1E9-D8381621B01E}</Project>
-      <Name>OpenXmlStreams</Name>
+    <ProjectReference Include="..\OpenXmlExtensions\OpenXmlExtensions.csproj">
+      <Project>{0FFBE211-D608-462A-9BA3-6EF51F801747}</Project>
+      <Name>OpenXmlExtensions</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

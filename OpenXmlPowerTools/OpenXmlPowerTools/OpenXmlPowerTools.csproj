@@ -65,6 +65,8 @@
     <Compile Include="PegBase.cs" />
     <Compile Include="PresentationBuilder.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="PtMemoryStreamExtensions.cs" />
+    <Compile Include="PtMemoryStreamFactory.cs" />
     <Compile Include="PtOpenXmlDocument.cs" />
     <Compile Include="PtOpenXmlUtil.cs" />
     <Compile Include="PtUtil.cs" />
@@ -74,6 +76,12 @@
     <Compile Include="TextReplacer.cs" />
     <Compile Include="WmlDocument.cs" />
     <Compile Include="WorksheetAccessor.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\OpenXmlExtensions\OpenXmlExtensions\OpenXmlExtensions.csproj">
+      <Project>{0FFBE211-D608-462A-9BA3-6EF51F801747}</Project>
+      <Name>OpenXmlExtensions</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
