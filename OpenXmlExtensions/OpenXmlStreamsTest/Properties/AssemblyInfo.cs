@@ -28,11 +28,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("OOXMLStreamsTest")]
+[assembly: AssemblyTitle("OpenXmlStreamsTest")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Thomas Barnekow")]
-[assembly: AssemblyProduct("OOXMLStreamsTest")]
+[assembly: AssemblyCompany("")]
+[assembly: AssemblyProduct("OpenXmlStreamsTest")]
 [assembly: AssemblyCopyright("Copyright 2014 Thomas Barnekow")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
