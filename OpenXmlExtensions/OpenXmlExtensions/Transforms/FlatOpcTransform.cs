@@ -29,6 +29,7 @@ using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 
+using DocumentFormat.OpenXml.Extensions;
 using DocumentFormat.OpenXml.Packaging;
 
 namespace DocumentFormat.OpenXml.Transforms
@@ -172,14 +173,12 @@ namespace DocumentFormat.OpenXml.Transforms
 
             // Save root elements of all parts contained in document to their
             // respective package parts. 
-            //foreach (OpenXmlPart part in openXmlPackage.GetAllParts())
-            //    part.RootElement.Save();
-            //TODO: Refactor extension method GetAllParts()
-            foreach (OpenXmlPart part in openXmlPackage.GetPartsOfType<OpenXmlPart>())
-                part.RootElement.Save();
+            // foreach (OpenXmlPart part in openXmlPackage.GetAllParts())
+            //     part.RootElement.Save();
+            openXmlPackage.Save();
 
             // Save all parts to package.
-            openXmlPackage.Package.Flush();
+            // openXmlPackage.Package.Flush();
 
             // Convert package.
             return FlatOpcTransform.ToFlatOpc(openXmlPackage.Package, instruction);

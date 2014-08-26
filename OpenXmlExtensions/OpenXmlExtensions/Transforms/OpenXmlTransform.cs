@@ -107,7 +107,7 @@ namespace DocumentFormat.OpenXml.Transforms
             if (document == null)
                 return null;
 
-            return TransformInPlace(document.Copy());
+            return TransformInPlace((WordprocessingDocument)document.Clone());
         }
 
         public virtual WordprocessingDocument TransformInPlace(WordprocessingDocument document)

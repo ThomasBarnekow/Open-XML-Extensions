@@ -36,40 +36,44 @@ namespace DocumentFormat.OpenXml.Extensions
     /// </summary>
     public static class WordprocessingDocumentExtensions
     {
-        /// <summary>
-        /// Copies the document. The copy will be backed by a <see cref="MemoryStream"/>.
-        /// </summary>
-        /// <param name="document">The document</param>
-        /// <returns>The copy</returns>
-        public static WordprocessingDocument Copy(this WordprocessingDocument document)
-        {
-            return Copy(document, new MemoryStream());
-        }
+        ///// <summary>
+        ///// Copies the document. The copy will be backed by a <see cref="MemoryStream"/>.
+        ///// </summary>
+        ///// <param name="document">The document</param>
+        ///// <returns>The copy</returns>
+        //public static WordprocessingDocument Clone(this WordprocessingDocument document)
+        //{
+        //    return Clone(document, new MemoryStream());
+        //}
 
-        /// <summary>
-        /// Copies the document. The copy will be backed by the given <see cref="Stream"/>.
-        /// </summary>
-        /// <param name="document">The document</param>
-        /// <param name="stream"></param>
-        /// <returns>The copy</returns>
-        public static WordprocessingDocument Copy(this WordprocessingDocument document, Stream stream)
-        {
-            if (document == null)
-                throw new ArgumentNullException("document");
-            if (stream == null)
-                throw new ArgumentNullException("stream");
+        ///// <summary>
+        ///// Copies the document. The copy will be backed by the given <see cref="Stream"/>.
+        ///// </summary>
+        ///// <param name="document">The document</param>
+        ///// <param name="stream"></param>
+        ///// <returns>The copy</returns>
+        //public static WordprocessingDocument Clone(this WordprocessingDocument document, Stream stream)
+        //{
+        //    if (document == null)
+        //        throw new ArgumentNullException("document");
+        //    if (stream == null)
+        //        throw new ArgumentNullException("stream");
 
-            // Create new WordprocessingDocument backed by stream.
-            WordprocessingDocument copy = WordprocessingDocument.Create(stream, document.DocumentType);
-
-            // Copy all document parts (AddPart will copy the parts and their 
-            // children in a recursive fashion).
-            foreach (var part in document.Parts)
-                copy.AddPart(part.OpenXmlPart, part.RelationshipId);
-
-            copy.Package.Flush();
-            return copy;
-        }
+        //    // Create new WordprocessingDocument backed by stream. Next, copy all
+        //    // document parts (AddPart will copy the parts and their children in 
+        //    // a recursive fashion) and close/dispose the document (by leaving the
+        //    // scope of the using statement). Finally, reopen the copy from the
+        //    // MemoryStream. 
+        //    // This way, writing the stream to a file directly after returing from 
+        //    // this method will not lead to issues with corrupt files.
+        //    using (WordprocessingDocument clone = WordprocessingDocument.Create(
+        //        stream, document.DocumentType))
+        //    {
+        //        foreach (var part in document.Parts)
+        //            clone.AddPart(part.OpenXmlPart, part.RelationshipId);
+        //    }
+        //    return WordprocessingDocument.Open(stream, true);
+        //}
 
         /// <summary>
         /// Replaces the document's contents with the contents of the given replacement's contents.
@@ -77,14 +81,16 @@ namespace DocumentFormat.OpenXml.Extensions
         /// <param name="document">The destination document</param>
         /// <param name="replacement">The source document</param>
         /// <returns>The original document with replaced contents</returns>
-        public static WordprocessingDocument ReplaceWith(this WordprocessingDocument document, WordprocessingDocument replacement)
+        public static WordprocessingDocument ReplaceWith(this WordprocessingDocument document, 
+            WordprocessingDocument replacement)
         {
             if (document == null)
                 throw new ArgumentNullException("document");
             if (replacement == null)
                 throw new ArgumentNullException("replacement");
 
-            // Delete all parts (every part is an OpenXmlPart).
+            // Delete all parts (i.e., the direct relationship targets and their
+            // children).
             document.DeleteParts(document.GetPartsOfType<OpenXmlPart>());
 
             // Add the replacement's parts to the document.
