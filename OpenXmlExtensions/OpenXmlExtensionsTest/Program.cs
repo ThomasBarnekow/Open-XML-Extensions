@@ -11,6 +11,7 @@ using DocumentFormat.OpenXml.Extensions;
 using DocumentFormat.OpenXml.IO;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Transforms;
+using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace OpenXmlExtensionsTest
 {
@@ -22,6 +23,8 @@ namespace OpenXmlExtensionsTest
             TestPackageOnFileBasedClone();
             TestPackageOnStreamBasedClone();
             TestFileBasedClone();
+
+            TestSave();
         }
 
         static void TestStreamBasedClone()
@@ -162,9 +165,66 @@ namespace OpenXmlExtensionsTest
             Console.ReadKey();
         }
 
+        /// <summary>
+        /// Inserts a new paragraph.
+        /// </summary>
+        /// <param name="body"></param>
+        /// <param name="styleId">The style ID or null</param>
+        /// <param name="text"></param>
+        static Paragraph InsertParagraph(Body body, string styleId, string text)
+        {
+            Paragraph p = new Paragraph(new Run(new Text(text)));
+            if (styleId != null)
+                p.InsertAt(new ParagraphProperties(new ParagraphStyleId { Val = styleId }), 0);
+            
+            if (body.LastChild != null && body.LastChild is SectionProperties)
+                return body.LastChild.InsertBeforeSelf(p);
+            else
+                return body.AppendChild(p);
+        }
+
         static void TestSave()
         {
+            Console.WriteLine("\nTesting Save ...");
 
+            string sourcePath = "Document.docx";
+            string destPath = "SavedDocument.docx";
+
+            using (MemoryStream memoryStream = new MemoryStream())
+            using (WordprocessingDocument source = WordprocessingDocument.Open(sourcePath, true))
+            using (WordprocessingDocument dest = (WordprocessingDocument)source.Clone(memoryStream))
+            {
+                Document document = dest.MainDocumentPart.Document;
+                Body body = document.Body;
+
+                // Make whatever changes you want to make on any part of the document.
+                dest.CreateParagraphStyle("MyStyle", "My Test Style", "Normal", "MyStyle");
+                InsertParagraph(body, "MyStyle", "Inserted paragraph");
+
+                // Save the document. 
+                // If we knew exactly what we changed, we could also do it like this:
+                //     document.Save();
+                //     dest.Package.Flush();
+                // However, we'd have to save each root element, e.g., Document, that
+                // changed. Save will do the job for us and also flush the Package.
+                dest.Save();
+                
+                // Now, let's see whether we can save the MemoryStream to a file.
+                using (FileStream fileStream = new FileStream(destPath, FileMode.Create))
+                    memoryStream.WriteTo(fileStream);
+            }
+
+            // Second pass: Open the file saved from the MemoryStream containing the clone.
+            // Perform some operations to see whether there are issues.
+            using (WordprocessingDocument dest = WordprocessingDocument.Open(destPath, true))
+            {
+                Console.WriteLine("\nListing all parts after reopening the saved clone:");
+                foreach (var part in dest.GetAllParts())
+                    Console.WriteLine(part.Uri);
+            }
+
+            Console.WriteLine("\nPress any key to continue ...");
+            Console.ReadKey();
         }
     }
 }
