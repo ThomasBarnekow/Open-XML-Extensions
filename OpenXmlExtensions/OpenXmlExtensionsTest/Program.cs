@@ -7,6 +7,7 @@ using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 
+using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Extensions;
 using DocumentFormat.OpenXml.IO;
 using DocumentFormat.OpenXml.Packaging;
@@ -17,155 +18,130 @@ namespace OpenXmlExtensionsTest
 {
     class Program
     {
+        static string documentPath = "Document.docx";
+        static string spreadsheetPath = "Spreadsheet.xlsx";
+        static string presentationPath = "Presentation.pptx";
+        
         static void Main(string[] args)
         {
             TestStreamBasedClone();
-            TestPackageOnFileBasedClone();
-            TestPackageOnStreamBasedClone();
             TestFileBasedClone();
-
+            TestPackageBasedClone();
             TestSave();
+        }
+
+        static void CheckWordprocessingDocument(string path)
+        {
+            using (WordprocessingDocument dest = WordprocessingDocument.Open(path, false))
+            {
+                OpenXmlElement root = dest.MainDocumentPart.Document;
+            }
+        }
+
+        static void CheckSpreadsheetDocument(string path)
+        {
+            using (SpreadsheetDocument doc = SpreadsheetDocument.Open(path, false))
+            {
+                OpenXmlElement root = doc.WorkbookPart.Workbook;
+            }
+        }
+
+        static void CheckPresentationDocument(string path)
+        {
+            using (PresentationDocument doc = PresentationDocument.Open(path, false))
+            {
+                OpenXmlElement root = doc.PresentationPart.Presentation;
+            }
         }
 
         static void TestStreamBasedClone()
         {
-            Console.WriteLine("\nTesting MemoryStream-based cloning ...");
-
-            string sourcePath = "Document.docx";
-            string destPath = "StreamBasedClone.docx";
-
-            // First pass: Create a clone on a MemoryStream and write the latter to a file
-            // right away. This tests whether the MemoryStream contains a valid document
-            // after having cloned the document.
-            using (WordprocessingDocument source = WordprocessingDocument.Open(sourcePath, true))
+            // Test WordprocessingDocument.
+            using (WordprocessingDocument source = WordprocessingDocument.Open(documentPath, true))
             using (MemoryStream memoryStream = new MemoryStream())
-            using (FileStream fileStream = new FileStream(destPath, FileMode.Create))
+            using (WordprocessingDocument dest = (WordprocessingDocument)source.Clone(memoryStream, true))
+            using (FileStream fileStream = new FileStream("Stream " + documentPath, FileMode.Create))
             {
-                WordprocessingDocument dest = (WordprocessingDocument)source.Clone(memoryStream, true);
-                Console.WriteLine("\nListing all parts after creating the clone:");
-                foreach (var part in dest.GetAllParts())
-                    Console.WriteLine(part.Uri);
-
                 memoryStream.WriteTo(fileStream);
             }
+            CheckWordprocessingDocument("Stream " + documentPath);
 
-            // Second pass: Open the file saved from the MemoryStream containing the clone.
-            // Perform some operations to see whether there are issues.
-            using (WordprocessingDocument dest = WordprocessingDocument.Open(destPath, true))
-            {
-                Console.WriteLine("\nListing all parts after reopening the saved clone:");
-                foreach (var part in dest.GetAllParts())
-                    Console.WriteLine(part.Uri);
-            }
-
-            Console.WriteLine("\nPress any key to continue ...");
-            Console.ReadKey();
-        }
-
-        static void TestPackageOnFileBasedClone()
-        {
-            Console.WriteLine("\nTesting Package on File-based cloning ...");
-
-            string sourcePath = "Document.docx";
-            string destPath = "PackageOnFileBasedClone.docx";
-
-            // First pass: Create a clone using the package-based Clone method. This should
-            // automatically save the file (when leaving the scope of the using statement).
-            using (WordprocessingDocument source = WordprocessingDocument.Open(sourcePath, true))
-            using (Package package = Package.Open(destPath, FileMode.Create))
-            {
-                WordprocessingDocument dest = (WordprocessingDocument)source.Clone(package);
-                Console.WriteLine("\nListing all parts after creating the clone:");
-                foreach (var part in dest.GetAllParts())
-                    Console.WriteLine(part.Uri);
-                
-                XDocument doc = FlatOpcTransform.ToFlatOpc(dest);
-                using (XmlWriter xw = XmlWriter.Create("PackageOnFileBasedClone.xml", new XmlWriterSettings { Indent = true }))
-                    doc.WriteTo(xw);
-            }
-
-            // Second pass: Open the file created by the Package.Open(string, FileMode) method.
-            // Perform some operations to see whether there are issues.
-            using (WordprocessingDocument dest = WordprocessingDocument.Open(destPath, true))
-            {
-                Console.WriteLine("\nListing all parts after reopening the saved clone:");
-                foreach (var part in dest.GetAllParts())
-                    Console.WriteLine(part.Uri);
-            }
-
-            Console.WriteLine("\nPress any key to continue ...");
-            Console.ReadKey();
-        }
-
-        static void TestPackageOnStreamBasedClone()
-        {
-            Console.WriteLine("\nTesting Package on MemoryStream-based cloning ...");
-
-            string sourcePath = "Document.docx";
-            string destPath = "PackageOnStreamBasedClone.docx";
-
-            // First pass: Clone a document, using a combination of MemoryStream and Package.
+            // Test SpreadsheetDocument.
+            using (SpreadsheetDocument source = SpreadsheetDocument.Open(spreadsheetPath, true))
             using (MemoryStream memoryStream = new MemoryStream())
+            using (SpreadsheetDocument dest = (SpreadsheetDocument)source.Clone(memoryStream, true))
+            using (FileStream fileStream = new FileStream("Stream " + spreadsheetPath, FileMode.Create))
             {
-                using (Package package = Package.Open(memoryStream, FileMode.Create))
-                using (WordprocessingDocument source = WordprocessingDocument.Open(sourcePath, true))
-                using (WordprocessingDocument dest = (WordprocessingDocument)source.Clone(package))
-                {
-                    Console.WriteLine("\nListing all parts after creating the clone:");
-                    foreach (var part in dest.GetAllParts())
-                        Console.WriteLine(part.Uri);
-
-                    XDocument doc = FlatOpcTransform.ToFlatOpc(dest);
-                    using (XmlWriter xw = XmlWriter.Create("PackageOnStreamBasedClone.xml", new XmlWriterSettings { Indent = true }))
-                        doc.WriteTo(xw);
-                }
-
-                using (FileStream fileStream = new FileStream(destPath, FileMode.Create))
-                    memoryStream.WriteTo(fileStream);
+                memoryStream.WriteTo(fileStream);
             }
+            CheckSpreadsheetDocument("Stream " + spreadsheetPath);
 
-            // Second pass: Open the file saved from the MemoryStream containing the clone.
-            // Perform some operations to see whether there are issues.
-            using (WordprocessingDocument dest = WordprocessingDocument.Open(destPath, true))
+            // Test PresentationDocument.
+            using (PresentationDocument source = PresentationDocument.Open(presentationPath, true))
+            using (MemoryStream memoryStream = new MemoryStream())
+            using (PresentationDocument dest = (PresentationDocument)source.Clone(memoryStream, true))
+            using (FileStream fileStream = new FileStream("Stream " + presentationPath, FileMode.Create))
             {
-                Console.WriteLine("\nListing all parts after reopening the saved clone:");
-                foreach (var part in dest.GetAllParts())
-                    Console.WriteLine(part.Uri);
+                memoryStream.WriteTo(fileStream);
             }
-
-            Console.WriteLine("\nPress any key to continue ...");
-            Console.ReadKey();
+            CheckPresentationDocument("Stream " + presentationPath);
         }
 
         static void TestFileBasedClone()
         {
-            Console.WriteLine("\nTesting File-based cloning ...");
-
-            string sourcePath = "Document.docx";
-            string destPath = "FileBasedClone.docx";
-
-            using (WordprocessingDocument source = WordprocessingDocument.Open(sourcePath, true))
-            using (WordprocessingDocument dest = (WordprocessingDocument)source.Clone(destPath))
+            // Test WordprocessingDocument.
+            using (WordprocessingDocument source = WordprocessingDocument.Open(documentPath, true))
+            using (WordprocessingDocument dest = (WordprocessingDocument)source.Clone("File " + documentPath, false))
             {
-                Console.WriteLine("\nListing all parts after creating the clone:");
-                foreach (var part in dest.GetAllParts())
-                    Console.WriteLine(part.Uri);
+                CheckWordprocessingDocument("File " + documentPath);
             }
 
-            // Second pass: Open the file saved from the MemoryStream containing the clone.
-            // Perform some operations to see whether there are issues.
-            using (WordprocessingDocument dest = WordprocessingDocument.Open(destPath, true))
+            // Test SpreadsheetDocument.
+            using (SpreadsheetDocument source = SpreadsheetDocument.Open(spreadsheetPath, true))
+            using (SpreadsheetDocument dest = (SpreadsheetDocument)source.Clone("File " + spreadsheetPath, false))
             {
-                Console.WriteLine("\nListing all parts after reopening the saved clone:");
-                foreach (var part in dest.GetAllParts())
-                    Console.WriteLine(part.Uri);
+                CheckSpreadsheetDocument("File " + spreadsheetPath);
             }
 
-            Console.WriteLine("\nPress any key to continue ...");
-            Console.ReadKey();
+            // Test PresentationDocument.
+            using (PresentationDocument source = PresentationDocument.Open(presentationPath, true))
+            using (PresentationDocument dest = (PresentationDocument)source.Clone("File " + presentationPath, false))
+            {
+                CheckPresentationDocument("File " + presentationPath);
+            }
         }
 
-        /// <summary>
+        static void TestPackageBasedClone()
+        {
+            // Test WordprocessingDocument.
+            using (WordprocessingDocument source = WordprocessingDocument.Open(documentPath, true))
+            using (Package package = Package.Open("Package " + documentPath, FileMode.Create))
+            using (WordprocessingDocument dest = (WordprocessingDocument)source.Clone(package))
+            {
+                OpenXmlElement root = dest.MainDocumentPart.Document;
+            }
+            CheckWordprocessingDocument("Package " + documentPath);
+
+            // Test SpreadsheetDocument.
+            using (SpreadsheetDocument source = SpreadsheetDocument.Open(spreadsheetPath, true))
+            using (Package package = Package.Open("Package " + spreadsheetPath, FileMode.Create))
+            using (SpreadsheetDocument dest = (SpreadsheetDocument)source.Clone(package))
+            {
+                OpenXmlElement root = dest.WorkbookPart.Workbook;
+            }
+            CheckSpreadsheetDocument("Package " + spreadsheetPath);
+
+            // Test PresentationDocument.
+            using (PresentationDocument source = PresentationDocument.Open(presentationPath, true))
+            using (Package package = Package.Open("Package " + presentationPath, FileMode.Create))
+            using (PresentationDocument dest = (PresentationDocument)source.Clone(package))
+            {
+                OpenXmlElement root = dest.PresentationPart.Presentation;
+            }
+            CheckPresentationDocument("Package " + presentationPath);
+        }
+
+         /// <summary>
         /// Inserts a new paragraph.
         /// </summary>
         /// <param name="body"></param>
@@ -185,13 +161,8 @@ namespace OpenXmlExtensionsTest
 
         static void TestSave()
         {
-            Console.WriteLine("\nTesting Save ...");
-
-            string sourcePath = "Document.docx";
-            string destPath = "SavedDocument.docx";
-
             using (MemoryStream memoryStream = new MemoryStream())
-            using (WordprocessingDocument source = WordprocessingDocument.Open(sourcePath, true))
+            using (WordprocessingDocument source = WordprocessingDocument.Open(documentPath, true))
             using (WordprocessingDocument dest = (WordprocessingDocument)source.Clone(memoryStream))
             {
                 Document document = dest.MainDocumentPart.Document;
@@ -210,21 +181,10 @@ namespace OpenXmlExtensionsTest
                 dest.Save();
                 
                 // Now, let's see whether we can save the MemoryStream to a file.
-                using (FileStream fileStream = new FileStream(destPath, FileMode.Create))
+                using (FileStream fileStream = new FileStream("Saved " + documentPath, FileMode.Create))
                     memoryStream.WriteTo(fileStream);
             }
-
-            // Second pass: Open the file saved from the MemoryStream containing the clone.
-            // Perform some operations to see whether there are issues.
-            using (WordprocessingDocument dest = WordprocessingDocument.Open(destPath, true))
-            {
-                Console.WriteLine("\nListing all parts after reopening the saved clone:");
-                foreach (var part in dest.GetAllParts())
-                    Console.WriteLine(part.Uri);
-            }
-
-            Console.WriteLine("\nPress any key to continue ...");
-            Console.ReadKey();
+            CheckWordprocessingDocument("Saved " + documentPath);
         }
     }
 }
