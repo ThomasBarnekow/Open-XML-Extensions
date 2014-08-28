@@ -27,7 +27,9 @@ namespace OpenXmlExtensionsTest
             TestStreamBasedClone();
             TestFileBasedClone();
             TestPackageBasedClone();
+
             TestSave();
+            TestSaveAs();
         }
 
         static void CheckWordprocessingDocument(string path)
@@ -170,7 +172,7 @@ namespace OpenXmlExtensionsTest
 
                 // Make whatever changes you want to make on any part of the document.
                 dest.CreateParagraphStyle("MyStyle", "My Test Style", "Normal", "MyStyle");
-                InsertParagraph(body, "MyStyle", "Inserted paragraph");
+                InsertParagraph(body, "MyStyle", "Inserted paragraph during TestSave().");
 
                 // Save the document. 
                 // If we knew exactly what we changed, we could also do it like this:
@@ -181,10 +183,37 @@ namespace OpenXmlExtensionsTest
                 dest.Save();
                 
                 // Now, let's see whether we can save the MemoryStream to a file.
-                using (FileStream fileStream = new FileStream("Saved " + documentPath, FileMode.Create))
+                using (FileStream fileStream = new FileStream("Save " + documentPath, FileMode.Create))
                     memoryStream.WriteTo(fileStream);
             }
-            CheckWordprocessingDocument("Saved " + documentPath);
+            CheckWordprocessingDocument("Save " + documentPath);
+        }
+
+        static void TestSaveAs()
+        {
+            // This is probably a bit too much as SaveAs(string) really equals Clone(string).
+            // But let's pretend we didn't know that.
+
+            // Test WordprocessingDocument.
+            using (WordprocessingDocument source = WordprocessingDocument.Open(documentPath, false))
+            using (WordprocessingDocument dest = (WordprocessingDocument)source.SaveAs("SaveAs " + documentPath))
+            {
+                CheckWordprocessingDocument("SaveAs " + documentPath);
+            }
+
+            // Test SpreadsheetDocument.
+            using (SpreadsheetDocument source = SpreadsheetDocument.Open(spreadsheetPath, false))
+            using (SpreadsheetDocument dest = (SpreadsheetDocument)source.SaveAs("SaveAs " + spreadsheetPath))
+            {
+                CheckSpreadsheetDocument("SaveAs " + spreadsheetPath);
+            }
+
+            // Test PresentationDocument.
+            using (PresentationDocument source = PresentationDocument.Open(presentationPath, false))
+            using (PresentationDocument dest = (PresentationDocument)source.SaveAs("SaveAs " + presentationPath))
+            {
+                CheckPresentationDocument("SaveAs " + presentationPath);
+            }
         }
     }
 }
