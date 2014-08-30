@@ -32,64 +32,6 @@ namespace DocumentFormat.OpenXml.Transforms
 {
     public abstract class OpenXmlTransform
     {
-        #region Tools
-
-        public static string ToFlatOpcString(XDocument document)
-        {
-            if (document == null)
-                return null;
-
-            return document.ToString();
-        }
-
-        public static string ToFlatOpcString(WordprocessingDocument document)
-        {
-            if (document == null)
-                return null;
-
-            return ToFlatOpcDocument(document).ToString();
-        }
-
-        public static XDocument ToFlatOpcDocument(string xml)
-        {
-            if (xml == null)
-                return null;
-
-            return XDocument.Parse(xml);
-        }
-
-        public static XDocument ToFlatOpcDocument(WordprocessingDocument document)
-        {
-            if (document == null)
-                return null;
-
-            return FlatOpcTransform.ToFlatOpc(document);
-        }
-
-        public static WordprocessingDocument ToWordprocessingDocument(string xml)
-        {
-            if (xml == null)
-                return null;
-
-            return ToWordprocessingDocument(XDocument.Parse(xml));
-        }
-
-        public static WordprocessingDocument ToWordprocessingDocument(XDocument document)
-        {
-            if (document == null)
-                return null;
-
-            // Write OPC document to memory stream.
-            MemoryStream stream = new MemoryStream();
-            using (Package package = Package.Open(stream, FileMode.Create))
-                FlatOpcTransform.ToOpc(document, package);
-
-            // Create editable WordprocessingDocument from memory stream.
-            return WordprocessingDocument.Open(stream, true);
-        }
-
-        #endregion
-
         #region Transforms
 
         public virtual string Transform(string xml)
@@ -129,8 +71,8 @@ namespace DocumentFormat.OpenXml.Transforms
             if (document == null)
                 return null;
 
-            string result = Transform(ToFlatOpcString(document));
-            return ToFlatOpcDocument(result);
+            string result = Transform(document.ToString());
+            return XDocument.Parse(result);
         }
 
         sealed public override WordprocessingDocument TransformInPlace(WordprocessingDocument document)
@@ -138,8 +80,8 @@ namespace DocumentFormat.OpenXml.Transforms
             if (document == null)
                 return null;
 
-            string result = Transform(ToFlatOpcString(document));
-            using (WordprocessingDocument resultDoc = ToWordprocessingDocument(result))
+            string result = Transform(document.ToFlatOpcString());
+            using (WordprocessingDocument resultDoc = WordprocessingDocument.FromFlatOpcString(result))
                 return document.ReplaceWith(resultDoc);
         }
     }
@@ -155,8 +97,8 @@ namespace DocumentFormat.OpenXml.Transforms
             if (xml == null)
                 return null;
 
-            XDocument result = Transform(ToFlatOpcDocument(xml));
-            return ToFlatOpcString(result);
+            XDocument result = Transform(XDocument.Parse(xml));
+            return result.ToString();
         }
 
         sealed public override WordprocessingDocument TransformInPlace(WordprocessingDocument document)
@@ -164,8 +106,8 @@ namespace DocumentFormat.OpenXml.Transforms
             if (document == null)
                 return null;
 
-            XDocument result = Transform(ToFlatOpcDocument(document));
-            using (WordprocessingDocument wordDoc = ToWordprocessingDocument(result))
+            XDocument result = Transform(document.ToFlatOpcDocument());
+            using (WordprocessingDocument wordDoc = WordprocessingDocument.FromFlatOpcDocument(result))
                 return document.ReplaceWith(wordDoc);
         }
     }
@@ -189,8 +131,8 @@ namespace DocumentFormat.OpenXml.Transforms
             if (xml == null)
                 return null;
 
-            using (WordprocessingDocument document = ToWordprocessingDocument(xml))
-                return ToFlatOpcString(TransformInPlace(document));
+            using (WordprocessingDocument document = WordprocessingDocument.FromFlatOpcString(xml))
+                return TransformInPlace(document).ToFlatOpcString();
         }
 
         sealed public override XDocument Transform(XDocument document)
@@ -198,8 +140,8 @@ namespace DocumentFormat.OpenXml.Transforms
             if (document == null)
                 return null;
 
-            using (WordprocessingDocument wordDoc = ToWordprocessingDocument(document))
-                return ToFlatOpcDocument(TransformInPlace(wordDoc));
+            using (WordprocessingDocument wordDoc = WordprocessingDocument.FromFlatOpcDocument(document))
+                return TransformInPlace(wordDoc).ToFlatOpcDocument();
         }
     }
 }

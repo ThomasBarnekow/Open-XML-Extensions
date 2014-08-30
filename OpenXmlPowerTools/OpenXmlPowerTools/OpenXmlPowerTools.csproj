@@ -50,7 +50,6 @@
     <Compile Include="DocumentBuilder.cs" />
     <Compile Include="ExcelFormula.cs" />
     <Compile Include="FieldRetriever.cs" />
-    <Compile Include="FlatOpc.cs" />
     <Compile Include="FormattingAssembler.cs" />
     <Compile Include="GetListItemText_Default.cs" />
     <Compile Include="GetListItemText_fr_FR.cs" />
