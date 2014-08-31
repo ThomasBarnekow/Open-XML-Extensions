@@ -36,45 +36,6 @@ namespace DocumentFormat.OpenXml.Extensions
     /// </summary>
     public static class WordprocessingDocumentExtensions
     {
-        ///// <summary>
-        ///// Copies the document. The copy will be backed by a <see cref="MemoryStream"/>.
-        ///// </summary>
-        ///// <param name="document">The document</param>
-        ///// <returns>The copy</returns>
-        //public static WordprocessingDocument Clone(this WordprocessingDocument document)
-        //{
-        //    return Clone(document, new MemoryStream());
-        //}
-
-        ///// <summary>
-        ///// Copies the document. The copy will be backed by the given <see cref="Stream"/>.
-        ///// </summary>
-        ///// <param name="document">The document</param>
-        ///// <param name="stream"></param>
-        ///// <returns>The copy</returns>
-        //public static WordprocessingDocument Clone(this WordprocessingDocument document, Stream stream)
-        //{
-        //    if (document == null)
-        //        throw new ArgumentNullException("document");
-        //    if (stream == null)
-        //        throw new ArgumentNullException("stream");
-
-        //    // Create new WordprocessingDocument backed by stream. Next, copy all
-        //    // document parts (AddPart will copy the parts and their children in 
-        //    // a recursive fashion) and close/dispose the document (by leaving the
-        //    // scope of the using statement). Finally, reopen the copy from the
-        //    // MemoryStream. 
-        //    // This way, writing the stream to a file directly after returing from 
-        //    // this method will not lead to issues with corrupt files.
-        //    using (WordprocessingDocument clone = WordprocessingDocument.Create(
-        //        stream, document.DocumentType))
-        //    {
-        //        foreach (var part in document.Parts)
-        //            clone.AddPart(part.OpenXmlPart, part.RelationshipId);
-        //    }
-        //    return WordprocessingDocument.Open(stream, true);
-        //}
-
         /// <summary>
         /// Replaces the document's contents with the contents of the given replacement's contents.
         /// </summary>
