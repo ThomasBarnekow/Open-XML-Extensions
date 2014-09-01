@@ -53,23 +53,34 @@ namespace System.IO.Packaging.FlatOpc
 
         public override void Flush()
         {
-            Position = 0;
-            if (Length > 0)
-                _part.PartDocument = XDocument.Load(this);
+#if VERBOSE
+            Console.WriteLine("FlatOpcPackagePartStream: Flushing: " + _part.Uri);
+#endif
+            SaveDocument();
         }
 
         protected override void Dispose(bool disposing)
         {
+#if VERBOSE
+            Console.WriteLine("FlatOpcPackagePartStream: Dispose(" + disposing + "): " + _part.Uri);
+#endif
             if (_disposed)
                 return;
 
             if (disposing)
             {
-                Flush();
+                SaveDocument();
                 _disposed = true;
             }
 
             base.Dispose(disposing);
+        }
+
+        private void SaveDocument()
+        {
+            Position = 0;
+            if (Length > 0)
+                _part.PartDocument = XDocument.Load(this);
         }
     }
 }

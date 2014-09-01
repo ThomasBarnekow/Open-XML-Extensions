@@ -9,6 +9,8 @@ namespace System.IO.Packaging.FlatOpc
         private XDeclaration _declaration = new XDeclaration("1.0", "UTF-8", "yes");
 
         private FlatOpcPackage _package;
+        private XDocument _partDocument;
+        private XElement _partElement;
 
         internal FlatOpcPackagePart(FlatOpcPackage package, Uri partUri)
             : this(package, partUri, null, CompressionOption.NotCompressed)
@@ -31,6 +33,9 @@ namespace System.IO.Packaging.FlatOpc
         
         protected override Stream GetStreamCore(FileMode mode, FileAccess access)
         {
+#if VERBOSE
+            Console.WriteLine("FlatOpcPackagePart: GetStreamCore: " + Uri);
+#endif
             FlatOpcPackagePartStream stream = null;
             if (mode == FileMode.Open || mode == FileMode.OpenOrCreate)
             {
@@ -69,14 +74,30 @@ namespace System.IO.Packaging.FlatOpc
             return stream;
         }
 
-        internal XDocument PartDocument { get; set; }
+        internal XDocument PartDocument 
+        {
+            get
+            {
+                return _partDocument;
+            }
+
+            set
+            {
+                _partDocument = value;
+                _partElement = new XElement(pkg + "part",
+                    new XAttribute(pkg + "name", Uri),
+                    new XAttribute(pkg + "contentType", ContentType),
+                    new XElement(pkg + "xmlData",
+                        RootElement));
+            }
+        }
 
         internal XElement RootElement
         {
             get
             {
-                if (PartDocument != null)
-                    return PartDocument.Root;
+                if (_partDocument != null)
+                    return _partDocument.Root;
                 else
                     return null;
             }
@@ -91,11 +112,7 @@ namespace System.IO.Packaging.FlatOpc
         {
             get
             {
-                return new XElement(pkg + "part", 
-                    new XAttribute(pkg + "name", Uri),
-                    new XAttribute(pkg + "contentType", ContentType),
-                    new XElement(pkg + "xmlData",
-                        RootElement));
+                return _partElement;
             }
         }
     }

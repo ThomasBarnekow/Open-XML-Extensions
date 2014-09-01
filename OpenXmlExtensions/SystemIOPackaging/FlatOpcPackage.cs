@@ -7,6 +7,8 @@ namespace System.IO.Packaging.FlatOpc
 {
     public class FlatOpcPackage : Package
     {
+        private static readonly XNamespace pkg = "http://schemas.microsoft.com/office/2006/xmlPackage";
+
         // Default values for the Package.Open method overloads
         private static readonly FileMode _defaultFileMode = FileMode.OpenOrCreate;
         private static readonly FileAccess _defaultFileAccess = FileAccess.ReadWrite;
@@ -15,17 +17,17 @@ namespace System.IO.Packaging.FlatOpc
         private static readonly FileMode _defaultStreamMode = FileMode.Open;
         private static readonly FileAccess _defaultStreamAccess = FileAccess.Read;
 
-        private static readonly XNamespace pkg = "http://schemas.microsoft.com/office/2006/xmlPackage";
-
         private XDeclaration _declaration = new XDeclaration("1.0", "UTF-8", "yes");
-        private XProcessingInstruction _processingInstruction;
+        private XProcessingInstruction _processingInstruction = null;
 
-        private Dictionary<Uri, FlatOpcPackagePart> _packagePartDictionary = new Dictionary<Uri, FlatOpcPackagePart>();
+        private SortedList<Uri, FlatOpcPackagePart> _partList = 
+            new SortedList<Uri, FlatOpcPackagePart>(new UriComparer());
 
-        private Stream _stream;
+        private Stream _stream = null;
+        private bool _disposed = false;
 
         internal FlatOpcPackage(FileAccess openFileAccess)
-            : base(openFileAccess)
+            : this(openFileAccess, false)
         { }
 
         internal FlatOpcPackage(FileAccess openFileAccess, bool streaming)
@@ -68,58 +70,89 @@ namespace System.IO.Packaging.FlatOpc
         public static new FlatOpcPackage Open(Stream stream, FileMode packageMode, FileAccess packageAccess)
         {
             FlatOpcPackage package = new FlatOpcPackage(packageAccess);
-            package._stream = stream;
+            package.Init(stream, packageMode);
+            return package;
+        }
+
+        private void Init(Stream stream, FileMode packageMode)
+        {
+            if (stream == null)
+                throw new ArgumentNullException("stream");
+
+            _stream = stream;
 
             if (packageMode == FileMode.Open || packageMode == FileMode.OpenOrCreate)
             {
-                if (stream.Length > 0)
-                {
-                    stream.Position = 0;
-                    package.Document = XDocument.Load(stream);
-                }
-                else 
-                {
-                    if (packageMode == FileMode.OpenOrCreate)
-                        package.SaveDocument();
-                    else
-                        throw new IOException("Stream is empty");
-                }
+                if (_stream.Length > 0)
+                    LoadDocument();
+                else if (packageMode == FileMode.OpenOrCreate)
+                    SaveDocument();
+                else
+                    throw new IOException("Stream is empty");
             }
             else if (packageMode == FileMode.Create)
             {
-                package.SaveDocument();
+                SaveDocument();
             }
             else if (packageMode == FileMode.CreateNew)
             {
-                if (stream.Length > 0)
+                if (_stream.Length > 0)
                     throw new IOException("Stream is not empty");
 
-                package.SaveDocument();
+                SaveDocument();
             }
             else
             {
                 throw new IOException("Unsupported FileMode: " + packageMode);
             }
+        }
 
-            return package;
+        private void LoadDocument()
+        {
+            if (_stream == null)
+                throw new ArgumentNullException("stream");
+
+            if (_stream.CanSeek && _stream.CanRead)
+            {
+                _stream.Position = 0;
+                Document = XDocument.Load(_stream);
+            }
+        }
+
+        private void SaveDocument()
+        {
+            if (_stream == null)
+                throw new ArgumentNullException("stream");
+
+            if (_stream.CanSeek && _stream.CanWrite)
+            {
+                _stream.Position = 0;
+                Document.Save(_stream);
+                _stream.Position = 0;
+            }
         }
 
         public XDocument Document
         {
             get
             {
+#if VERBOSE
+                Console.WriteLine("FlatOpcPackage: Document");
+#endif
                 return new XDocument(
                     _declaration,
                     _processingInstruction,
                     new XElement(pkg + "package",
                         new XAttribute(XNamespace.Xmlns + "pkg", pkg.ToString()),
-                        _packagePartDictionary.Values.Select(pp => pp.PartElement)));
+                        GetPartsCore().Select(pp => ((FlatOpcPackagePart)pp).PartElement)));
             }
 
             internal set
             {
                 if (value == null)
                     throw new ArgumentNullException("Document");
+                if (value.Root.Name != pkg + "package")
+                    throw new ArgumentException("Not a Flat OPC document", "Document");
 
                 _processingInstruction = value.Nodes()
                     .Where(n => n.NodeType == XmlNodeType.ProcessingInstruction)
@@ -133,54 +166,101 @@ namespace System.IO.Packaging.FlatOpc
                     FlatOpcPackagePart packagePart = new FlatOpcPackagePart(this, partUri, contentType);
                     packagePart.RootElement = (XElement)element.Element(pkg + "xmlData").FirstNode;
 
-                    _packagePartDictionary.Add(partUri, packagePart);
+                    _partList.Add(partUri, packagePart);
                 }
             }
         }
 
         protected override PackagePart CreatePartCore(Uri partUri, string contentType, CompressionOption compressionOption)
         {
+#if VERBOSE
+            Console.WriteLine("FlatOpcPackage: CreatePartCore: " + partUri);
+#endif
             if (partUri == null)
                 throw new ArgumentNullException("partUri");
-            
+
             FlatOpcPackagePart packagePart = new FlatOpcPackagePart(this, partUri, contentType, compressionOption);
             packagePart.RootElement = null;
 
-            _packagePartDictionary.Add(partUri, packagePart);
+            _partList.Add(partUri, packagePart);
             return packagePart;
         }
 
         protected override void DeletePartCore(Uri partUri)
         {
-            _packagePartDictionary.Remove(partUri);
+#if VERBOSE
+            Console.WriteLine("FlatOpcPackage: DeletePartCore: " + partUri);
+#endif
+            _partList.Remove(partUri);
         }
 
         protected override void FlushCore()
         {
+#if VERBOSE
+            Console.WriteLine("FlatOpcPackage: FlushCore");
+#endif
             SaveDocument();
         }
 
         protected override PackagePart GetPartCore(Uri partUri)
         {
-            if (_packagePartDictionary.ContainsKey(partUri))
-                return _packagePartDictionary[partUri];
+#if VERBOSE
+            Console.WriteLine("FlatOpcPackage: GetPartCore: " + partUri);
+#endif
+            if (_partList.ContainsKey(partUri))
+                return _partList[partUri];
             else
                 return null;
         }
 
         protected override PackagePart[] GetPartsCore()
         {
-            return _packagePartDictionary.Values.ToArray();
+#if VERBOSE
+            Console.WriteLine("FlatOpcPackage: GetPartsCore");
+#endif
+            List<PackagePart> parts = new List<PackagePart>(_partList.Keys.Count);
+            foreach (Uri partUri in _partList.Keys)
+                parts.Add(_partList[partUri]);
+
+            return parts.ToArray();
         }
 
-        private void SaveDocument()
+        protected override void Dispose(bool disposing)
         {
-            if (_stream != null)
+            if (_disposed)
+                return;
+#if VERBOSE
+            Console.WriteLine("FlatOpcPackage: Dispose(" + disposing + ")");
+#endif
+            try
             {
-                _stream.Position = 0;
-                Document.Save(_stream);
-                _stream.Position = 0;
+                if (disposing)
+                {                   
+                    SaveDocument();
+                    if (_stream != null)
+                        _stream.Dispose();
+
+                    _stream = null;
+                }
             }
+            finally
+            {
+                _disposed = true;
+                base.Dispose(disposing);
+            }
+        }
+    }
+
+    internal class UriComparer : Comparer<Uri>
+    {
+        public override int Compare(Uri x, Uri y)
+        {
+            if (x != null && y != null)
+                return x.ToString().CompareTo(y.ToString());
+            else if (x == null && y == null)
+                return 0;
+            else
+                throw new ArgumentNullException();
         }
     }
 }

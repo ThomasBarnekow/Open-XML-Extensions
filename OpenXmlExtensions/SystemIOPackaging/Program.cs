@@ -22,6 +22,7 @@ namespace SystemIOPackaging
 
         static void Main(string[] args)
         {
+            // SimpleFlatOpcPackageTest();
             WordprocessingDocumentBasedTest();
 
             Console.WriteLine("\nHit any key to continue...");
@@ -81,8 +82,8 @@ namespace SystemIOPackaging
 
         static void WordprocessingDocumentBasedTest()
         {
-            FlatOpcPackage package = FlatOpcPackage.Open("Test.xml", FileMode.OpenOrCreate);
-
+            // Create a new package.
+            FlatOpcPackage package = FlatOpcPackage.Open("Test.xml", FileMode.Create);
             using (WordprocessingDocument doc = WordprocessingDocument.Create(package, 
                 WordprocessingDocumentType.Document))
             {
@@ -93,11 +94,40 @@ namespace SystemIOPackaging
                             new Run(
                                 new Text("Hello World!")))));
 
-                // Not sure why we have to call this directly.
-                // We apparently have to do this, at least for now.
-                // There's probably a bug.
-                part.Document.Save();
-                package.Flush();
+            }
+            
+            // Open that package again.
+            package = FlatOpcPackage.Open("Test.xml", FileMode.Open);
+            using (WordprocessingDocument doc = WordprocessingDocument.Open(package))
+            {
+                Document document = doc.MainDocumentPart.Document;
+
+                // Write main document part's contents.
+                Console.WriteLine("\nHere's what we've created from scratch:");
+                StringBuilder sb = new StringBuilder();
+                using (XmlWriter xw = XmlWriter.Create(sb, new XmlWriterSettings { Indent = true }))
+                {
+                    document.WriteTo(xw);
+                }
+                Console.WriteLine(sb.ToString());
+            }
+
+            // Let's do something bigger, i.e., clone an OPC package-based Word document,
+            // to a FlatOpcPackage-based Open XML document.
+            package = FlatOpcPackage.Open("Clone.xml", FileMode.Create);
+            using (WordprocessingDocument original = WordprocessingDocument.Open("Document.docx", false))
+            using (WordprocessingDocument clone = (WordprocessingDocument)original.Clone(package))
+            {
+                Document document = clone.MainDocumentPart.Document;
+
+                // Write main document part's contents.
+                Console.WriteLine("\nHere's what we've just cloned:");
+                StringBuilder sb = new StringBuilder();
+                using (XmlWriter xw = XmlWriter.Create(sb, new XmlWriterSettings { Indent = true }))
+                {
+                    document.WriteTo(xw);
+                }
+                Console.WriteLine(sb.ToString());
             }
         }
     }
