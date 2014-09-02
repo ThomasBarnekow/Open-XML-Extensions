@@ -1,10 +1,36 @@
-﻿using System.Collections.Generic;
+﻿/*
+ * FlatOpcPackage.cs - Package for Flat OPC documents
+ * 
+ * Copyright 2014 Thomas Barnekow
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ * Developer: Thomas Barnekow
+ * Email: thomas<at/>barnekow<dot/>info
+ * 
+ * Version: 1.0.01
+ */
+
+using System.Collections.Generic;
 using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 
 namespace System.IO.Packaging.FlatOpc
 {
+    /// <summary>
+    /// This class represents a <see cref="Package"/> for Flat OPC documents.
+    /// </summary>
     public class FlatOpcPackage : Package
     {
         private static readonly XNamespace pkg = "http://schemas.microsoft.com/office/2006/xmlPackage";
@@ -26,10 +52,26 @@ namespace System.IO.Packaging.FlatOpc
         private Stream _stream = null;
         private bool _disposed = false;
 
+        /// <summary>
+        /// Initializes a new instance of FlatOpcPackage with the given file access
+        /// and non-streaming mode (i.e., streaming is false).
+        /// </summary>
+        /// <param name="openFileAccess">The desired <see cref="FileAccess"/> mode.</param>
         internal FlatOpcPackage(FileAccess openFileAccess)
             : this(openFileAccess, false)
         { }
 
+        /// <summary>
+        /// Initializes a new instance of FlatOpcPackage with the given file access
+        /// and streaming mode.
+        /// </summary>
+        /// <remarks>
+        /// Streaming is currently not supported. Therefore, if streaming is true,
+        /// an <see cref="IOException"/> is thrown.
+        /// </remarks>
+        /// <exception cref="IOException">If streaming is true.</exception>
+        /// <param name="openFileAccess"></param>
+        /// <param name="streaming"></param>
         internal FlatOpcPackage(FileAccess openFileAccess, bool streaming)
             : base(openFileAccess, streaming)
         {
@@ -37,36 +79,109 @@ namespace System.IO.Packaging.FlatOpc
                 throw new IOException("Streaming is currently not supported");
         }
 
+        /// <summary>
+        /// Opens a package from an <see cref="XDocument"/>. 
+        /// </summary>
+        /// <param name="document">The Flat OPC <see cref="XDocument"/></param>
+        /// <returns></returns>
+        public static FlatOpcPackage Open(XDocument document)
+        {
+            FlatOpcPackage package = new FlatOpcPackage(FileAccess.ReadWrite, false);
+            package.Document = document;
+            return package;
+        }
+
+        /// <summary>
+        /// Opens a FlatOpcPackage at the specified path. This method calls the overload 
+        /// which accepts all the parameters with the following defaults:
+        /// FileMode   - FileMode.OpenOrCreate
+        /// FileAccess - FileAccess.ReadWrite
+        /// FileShare  - FileShare.None
+        /// </summary>
+        /// <param name="path">Path to the package.</param>
+        /// <returns>A new instance of FlatOpcPackage.</returns>
         public static new FlatOpcPackage Open(string path)
         {
             return Open(path, _defaultFileMode, _defaultFileAccess);
         }
 
+        /// <summary>
+        /// Opens a FlatOpcPackage at the specified path in the given mode. This method 
+        /// calls the overload which accepts all the parameters with the following 
+        /// defaults:
+        /// FileAccess - FileAccess.ReadWrite
+        /// FileShare  - FileShare.None
+        /// </summary>
+        /// <param name="path">Path to the package.</param>
+        /// <param name="packageMode">FileMode in which the package should be opened.</param>
+        /// <returns>A new instance of FlatOpcPackage.</returns>
         public static new FlatOpcPackage Open(string path, FileMode packageMode)
         {
             return Open(path, packageMode, _defaultFileAccess);
         }
 
+        /// <summary>
+        /// Opens a FlatOpcPackage at the specified path in the given mode with the 
+        /// specified access. This method calls the overload which accepts all 
+        /// the parameters with the following defaults:
+        /// FileShare  - FileShare.None        
+        /// </summary>
+        /// <param name="path">Path to the package.</param>
+        /// <param name="packageMode">FileMode in which the package should be opened.</param>
+        /// <param name="packageAccess">FileMode in which the package should be opened.</param>
+        /// <returns>A new instance of FlatOpcPackage.</returns>
         public static new FlatOpcPackage Open(string path, FileMode packageMode, FileAccess packageAccess)
         {
             return Open(path, packageMode, packageAccess, _defaultFileShare);
         }
 
+        /// <summary>
+        /// Opens a FlatOpcPackage with the specified parameters.
+        /// </summary>
+        /// <param name="path">Path to the package.</param>
+        /// <param name="packageMode">FileMode in which the package should be opened.</param>
+        /// <param name="packageAccess">FileMode in which the package should be opened.</param>
+        /// <param name="packageShare">FileShare with which the package is opened.</param>
+        /// <returns>A new instance of FlatOpcPackage.</returns>
         public static new FlatOpcPackage Open(string path, FileMode packageMode, FileAccess packageAccess, FileShare packageShare)
         {
             return Open(new FileStream(path, packageMode, packageAccess, packageShare), packageMode, packageAccess);
         }
 
+        /// <summary>
+        /// Opens a FlatOpcPackage on the given stream. This method calls the overload 
+        /// which accepts all the parameters with the following defaults:
+        /// FileMode   - FileMode.Open
+        /// FileAccess - FileAccess.Read
+        /// </summary>
+        /// <param name="stream">Stream on which the package is to be opened.</param>
+        /// <returns>A new instance of FlatOpcPackage.</returns>
         public static new FlatOpcPackage Open(Stream stream)
         {
             return Open(stream, _defaultStreamMode, _defaultStreamAccess);
         }
 
+        /// <summary>
+        /// Opens a FlatOpcPackage on the given stream. This method calls the overload 
+        /// which accepts all the parameters with the following defaults:
+        /// FileAccess - FileAccess.ReadWrite
+        /// </summary>
+        /// <param name="stream">Stream on which the package is to be opened.</param>
+        /// <param name="packageMode">FileMode in which the package should be opened.</param>
+        /// <returns>A new instance of FlatOpcPackage.</returns>
         public static new FlatOpcPackage Open(Stream stream, FileMode packageMode)
         {
             return Open(stream, packageMode, _defaultStreamAccess);
         }
 
+        /// <summary>
+        /// Opens a FlatOpcPackage on the given stream. The package is opened in the 
+        /// specified mode and with the access specified.
+        /// </summary>
+        /// <param name="stream">Stream on which the package is to be opened.</param>
+        /// <param name="packageMode">FileMode in which the package is to be opened.</param>
+        /// <param name="packageAccess">FileAccess on the package that is opened.</param>
+        /// <returns>A new instance of FlatOpcPackage.</returns>
         public static new FlatOpcPackage Open(Stream stream, FileMode packageMode, FileAccess packageAccess)
         {
             FlatOpcPackage package = new FlatOpcPackage(packageAccess);
@@ -74,6 +189,11 @@ namespace System.IO.Packaging.FlatOpc
             return package;
         }
 
+        /// <summary>
+        /// Initializes this FlatOpcPackage.
+        /// </summary>
+        /// <param name="stream">The underlying <see cref="Stream"/>.</param>
+        /// <param name="packageMode">The package's <see cref="FileMode"/>.</param>
         private void Init(Stream stream, FileMode packageMode)
         {
             if (stream == null)
@@ -107,10 +227,15 @@ namespace System.IO.Packaging.FlatOpc
             }
         }
 
+        /// <summary>
+        /// Loads a Flat OPC <see cref="XDocument"/> from the underlying 
+        /// <see cref="Stream"/>.
+        /// </summary>
         private void LoadDocument()
         {
+            // Don't do anything if the package isn't backed by a stream.
             if (_stream == null)
-                throw new ArgumentNullException("stream");
+                return;
 
             if (_stream.CanSeek && _stream.CanRead)
             {
@@ -119,10 +244,16 @@ namespace System.IO.Packaging.FlatOpc
             }
         }
 
+        /// <summary>
+        /// Saves the Flat OPC <see cref="XDocument"/> represented by this
+        /// FlatOpcPackage to the underlying <see cref="Stream"/>, unless
+        /// we can't seek or write.
+        /// </summary>
         private void SaveDocument()
         {
+            // Don't do anything if the package isn't backed by a stream.
             if (_stream == null)
-                throw new ArgumentNullException("stream");
+                return;
 
             if (_stream.CanSeek && _stream.CanWrite)
             {
@@ -132,13 +263,13 @@ namespace System.IO.Packaging.FlatOpc
             }
         }
 
+        /// <summary>
+        /// Gets the Flat OPC <see cref="XDocument"/> represented by this Package.
+        /// </summary>
         public XDocument Document
         {
             get
             {
-#if VERBOSE
-                Console.WriteLine("FlatOpcPackage: Document");
-#endif
                 return new XDocument(
                     _declaration,
                     _processingInstruction,
@@ -171,11 +302,17 @@ namespace System.IO.Packaging.FlatOpc
             }
         }
 
-        protected override PackagePart CreatePartCore(Uri partUri, string contentType, CompressionOption compressionOption)
+        /// <summary>
+        /// Creates a new <see cref="FlatOpcPackagePart"/> with the given part 
+        /// <see cref="Uri"/>, content type, and <see cref="CompressionOption"/>.
+        /// </summary>
+        /// <param name="partUri">The <see cref="FlatOpcPackagePart"/>'s <see cref="Uri"/></param>
+        /// <param name="contentType">The content type.</param>
+        /// <param name="compressionOption">The <see cref="CompressionOption"/>.</param>
+        /// <returns>A new instance of <see cref="FlatOpcPackagePart"/>.</returns>
+        protected override PackagePart CreatePartCore(Uri partUri, string contentType, 
+            CompressionOption compressionOption)
         {
-#if VERBOSE
-            Console.WriteLine("FlatOpcPackage: CreatePartCore: " + partUri);
-#endif
             if (partUri == null)
                 throw new ArgumentNullException("partUri");
 
@@ -186,38 +323,52 @@ namespace System.IO.Packaging.FlatOpc
             return packagePart;
         }
 
+        /// <summary>
+        /// Deletes the <see cref="FlatOpcPackagePart"/> identified by the given
+        /// part <see cref="Uri"/>.
+        /// </summary>
+        /// <param name="partUri">The <see cref="FlatOpcPackagePart"/>'s <see cref="Uri"/>.</param>
         protected override void DeletePartCore(Uri partUri)
         {
-#if VERBOSE
-            Console.WriteLine("FlatOpcPackage: DeletePartCore: " + partUri);
-#endif
+            // Remove the part from the list.
+            // QUESTION: Should we also call FlushCore() or SaveDocument()?
             _partList.Remove(partUri);
         }
 
+        /// <summary>
+        /// Saves the Flat OPC document to the underlying stream or file.
+        /// </summary>
         protected override void FlushCore()
         {
 #if VERBOSE
-            Console.WriteLine("FlatOpcPackage: FlushCore");
+            // This is for testing purposes only.
+            Console.WriteLine("FlatOpcPackage.FlushCore()");
 #endif
             SaveDocument();
         }
 
+        /// <summary>
+        /// Gets the <see cref="FlatOpcPackagePart"/> with the given <see cref="Uri"/>
+        /// or null if it does not exist.
+        /// </summary>
+        /// <param name="partUri">The <see cref="FlatOpcPackagePart"/>'s <see cref="Uri"/>.</param>
+        /// <returns>The <see cref="FlatOpcPackagePart"/> or null.</returns>
         protected override PackagePart GetPartCore(Uri partUri)
         {
-#if VERBOSE
-            Console.WriteLine("FlatOpcPackage: GetPartCore: " + partUri);
-#endif
             if (_partList.ContainsKey(partUri))
                 return _partList[partUri];
             else
                 return null;
         }
 
+        /// <summary>
+        /// Produces an array of the <see cref="FlatOpcPackagePart"/>s contained in this
+        /// package, sorted in ascending order by the <see cref="FlatOpcPackagePart"/>s'
+        /// <see cref="Uri"/>s.
+        /// </summary>
+        /// <returns>The sorted array of package parts.</returns>
         protected override PackagePart[] GetPartsCore()
         {
-#if VERBOSE
-            Console.WriteLine("FlatOpcPackage: GetPartsCore");
-#endif
             List<PackagePart> parts = new List<PackagePart>(_partList.Keys.Count);
             foreach (Uri partUri in _partList.Keys)
                 parts.Add(_partList[partUri]);
@@ -225,12 +376,18 @@ namespace System.IO.Packaging.FlatOpc
             return parts.ToArray();
         }
 
+        /// <summary>
+        /// Disposes this package, saving the Flat OPC document to the underlying
+        /// stream or file (unless the package has been disposed already).
+        /// </summary>
+        /// <param name="disposing">True when disposing, false otherwise.</param>
         protected override void Dispose(bool disposing)
         {
             if (_disposed)
                 return;
 #if VERBOSE
-            Console.WriteLine("FlatOpcPackage: Dispose(" + disposing + ")");
+            // This is for testing purposes only.
+            Console.WriteLine("FlatOpcPackage.Dispose(" + disposing + ")");
 #endif
             try
             {
@@ -251,8 +408,17 @@ namespace System.IO.Packaging.FlatOpc
         }
     }
 
+    /// <summary>
+    /// This class represents a <see cref="Uri"/> <see cref="Comparer"/>.
+    /// </summary>
     internal class UriComparer : Comparer<Uri>
     {
+        /// <summary>
+        /// Compares two <see cref="Uri"/>s.
+        /// </summary>
+        /// <param name="x">First <see cref="Uri"/>.</param>
+        /// <param name="y">Second <see cref="Uri"/>.</param>
+        /// <returns></returns>
         public override int Compare(Uri x, Uri y)
         {
             if (x != null && y != null)

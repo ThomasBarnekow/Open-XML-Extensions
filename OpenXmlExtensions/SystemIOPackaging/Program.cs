@@ -1,14 +1,34 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿/*
+ * Program.cs - Test driver for FlatOpcPackage
+ * 
+ * Copyright 2014 Thomas Barnekow
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ * Developer: Thomas Barnekow
+ * Email: thomas<at/>barnekow<dot/>info
+ * 
+ * Version: 1.0.01
+ */
 
-using System.Xml;
-using System.Xml.Linq;
-
+using System;
 using System.IO;
 using System.IO.Packaging;
 using System.IO.Packaging.FlatOpc;
+using System.Linq;
+using System.Text;
+using System.Xml;
+using System.Xml.Linq;
 
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
@@ -16,6 +36,10 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace SystemIOPackaging
 {
+    /// <summary>
+    /// This class tests the FlatOpcPackage functionality. It will be replaced
+    /// by NUnit-based tests sooner or later.
+    /// </summary>
     class Program
     {
         static readonly XNamespace w = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
@@ -129,6 +153,30 @@ namespace SystemIOPackaging
                 }
                 Console.WriteLine(sb.ToString());
             }
+
+            // Let's now open the clone from an XDocument and look at the contents.
+            XDocument cloneDoc = XDocument.Load("Clone.xml");
+            package = FlatOpcPackage.Open(cloneDoc);
+            using (WordprocessingDocument clone = WordprocessingDocument.Open(package))
+            {
+                Document document = clone.MainDocumentPart.Document;
+                Paragraph p = document.Body.Elements<Paragraph>().First();
+
+                Console.WriteLine("\nHere's the first run of text of the XDocument we've opened as a FlatOpcPackage:");
+                Console.WriteLine(p.Descendants<Text>().First().Text);
+
+                p.InsertBeforeSelf(
+                    new Paragraph(
+                        new Run(
+                            new Text("Inserted before first paragraph"))));
+            }
+
+            // Let's access the package's Document again to see whether that works.
+            XDocument testDoc = package.Document;
+            XElement testElement = testDoc.Descendants(w + "t").First();
+            
+            Console.WriteLine("\nHere's what we got from the XDocument after closing the WordprocessingDocument:");
+            Console.WriteLine(testElement.Value);
         }
     }
 }
