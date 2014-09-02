@@ -56,6 +56,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FlatOpcTests.cs" />
+    <Compile Include="FlatOpcPackageTests.cs" />
     <Compile Include="SaveAndCloneTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestTools.cs" />
@@ -65,15 +66,22 @@
       <Project>{0FFBE211-D608-462A-9BA3-6EF51F801747}</Project>
       <Name>OpenXmlExtensions</Name>
     </ProjectReference>
+    <ProjectReference Include="..\PackagingExtensions\PackagingExtensions.csproj">
+      <Project>{D552F4C5-4B68-4780-A192-E8729D48A262}</Project>
+      <Name>PackagingExtensions</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Document.docx" />
-  </ItemGroup>
-  <ItemGroup>
+    <Content Include="Document.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Presentation.pptx" />
     <Content Include="Spreadsheet.xlsx" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Document.docx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

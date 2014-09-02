@@ -28,11 +28,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("OpenXmlExtensionsTest")]
+[assembly: AssemblyTitle("PackagingExtensions")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("OpenXmlExtensionsTest")]
+[assembly: AssemblyProduct("PackagingExtensions")]
 [assembly: AssemblyCopyright("Copyright 2014 Thomas Barnekow")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -43,7 +43,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("0bca5f62-198a-4c4e-a238-7f990466f315")]
+[assembly: Guid("ebee6297-c2b6-4f63-958f-30a1bda77eda")]
 
 // Version information for an assembly consists of the following four values:
 //

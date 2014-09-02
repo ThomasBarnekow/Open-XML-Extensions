@@ -52,8 +52,6 @@ namespace OpenXmlExtensionsTest
                 foreach (OpenXmlPart part in document.GetAllParts())
                     if (part.RootElement != null)
                         part.RootElement.Save();
-                    else
-                        Console.WriteLine("PrepareWordrocessingDocument: Part's RootElement is null: " + part.Uri);
             }
         }
 
@@ -64,8 +62,6 @@ namespace OpenXmlExtensionsTest
                 foreach (OpenXmlPart part in document.GetAllParts())
                     if (part.RootElement != null)
                         part.RootElement.Save();
-                    else
-                        Console.WriteLine("PrepareSpreadsheetDocument: Part's RootElement is null: " + part.Uri);
             }
         }
 
@@ -76,8 +72,6 @@ namespace OpenXmlExtensionsTest
                 foreach (OpenXmlPart part in document.GetAllParts())
                     if (part.RootElement != null)
                         part.RootElement.Save();
-                    else
-                        Console.WriteLine("PreparePresentationDocument: Part's RootElement is null: " + part.Uri);
             }
         }
 
