@@ -295,7 +295,20 @@ namespace System.IO.Packaging.FlatOpc
                     string contentType = element.Attribute(pkg + "contentType").Value;
 
                     FlatOpcPackagePart packagePart = new FlatOpcPackagePart(this, partUri, contentType);
-                    packagePart.RootElement = (XElement)element.Element(pkg + "xmlData").FirstNode;
+                    if (contentType.EndsWith("xml"))
+                    {
+                        packagePart.RootElement = (XElement)element.Element(pkg + "xmlData").FirstNode;
+                    }
+                    else
+                    {
+                        string base64StringInChunks = (string)element.Element(pkg + "binaryData");
+                        char[] base64CharArray = base64StringInChunks
+                            .Where(c => c != '\r' && c != '\n').ToArray();
+                        byte[] byteArray =
+                            System.Convert.FromBase64CharArray(
+                                base64CharArray, 0, base64CharArray.Length);
+                        packagePart.PartBinaryData = byteArray;
+                    }                       
 
                     _partList.Add(partUri, packagePart);
                 }
@@ -317,7 +330,7 @@ namespace System.IO.Packaging.FlatOpc
                 throw new ArgumentNullException("partUri");
 
             FlatOpcPackagePart packagePart = new FlatOpcPackagePart(this, partUri, contentType, compressionOption);
-            packagePart.RootElement = null;
+            // packagePart.RootElement = null;
 
             _partList.Add(partUri, packagePart);
             return packagePart;

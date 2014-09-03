@@ -21,6 +21,8 @@
  * Version: 1.0.01
  */
 
+using System.Linq;
+using System.Text;
 using System.Xml.Linq;
 
 namespace System.IO.Packaging.FlatOpc
@@ -30,6 +32,8 @@ namespace System.IO.Packaging.FlatOpc
     /// </summary>
     internal class FlatOpcPackagePartStream : MemoryStream
     {
+        private static readonly XNamespace pkg = "http://schemas.microsoft.com/office/2006/xmlPackage";
+
         FlatOpcPackagePart _part;
         bool _disposed = false;
 
@@ -100,7 +104,7 @@ namespace System.IO.Packaging.FlatOpc
             // This is for testing purposes only.
             Console.WriteLine("FlatOpcPackagePartStream.Flush(): " + _part.Uri);
 #endif
-            SaveDocument();
+            SaveToPart();
         }
 
         /// <summary>
@@ -120,7 +124,7 @@ namespace System.IO.Packaging.FlatOpc
 
             if (disposing)
             {
-                SaveDocument();
+                SaveToPart();
                 _disposed = true;
             }
 
@@ -133,13 +137,33 @@ namespace System.IO.Packaging.FlatOpc
         /// <see cref="XDocument"/> contained on this stream, unless we can't
         /// seek or read.
         /// </summary>
-        private void SaveDocument()
+        private void SaveToPart()
         {
             if (CanSeek && CanRead)
             {
+                if (Length == 0)
+                    return; 
+
                 Position = 0;
-                if (Length > 0)
+                if (_part.ContentType.EndsWith("xml"))
+                {
                     _part.PartDocument = XDocument.Load(this);
+                }
+                else
+                {
+                    byte[] buffer = new byte[Length];
+                    Array.Copy(GetBuffer(), buffer, Length);
+                    _part.PartBinaryData = buffer;
+
+                    //The following code led to an endless loop because the BinaryReader
+                    //disposed this stream while were saving to the part because somebody
+                    //else disposed this stream. 
+                    //using (BinaryReader binaryReader = new BinaryReader(this))
+                    //{
+                    //    int len = (int)binaryReader.BaseStream.Length;
+                    //    _part.PartBinaryData = binaryReader.ReadBytes(len);
+                    //}
+                }
             }
         }
     }

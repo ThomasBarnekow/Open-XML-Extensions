@@ -21,6 +21,8 @@
  * Version: 1.0.01
  */
 
+using System.Linq;
+using System.Text;
 using System.Xml.Linq;
 
 namespace System.IO.Packaging.FlatOpc
@@ -36,8 +38,14 @@ namespace System.IO.Packaging.FlatOpc
         private XDeclaration _declaration = new XDeclaration("1.0", "UTF-8", "yes");
 
         private FlatOpcPackage _package = null;
+
         private XDocument _partDocument = null;
-        private XElement _partElement = null;
+        byte[] _partBinaryData;
+
+        Uri _partUri = null;
+        string _partContentType = null;
+
+        // private XElement _partElement = null;
 
         // This is one of the base class constructors. However, we actually don't 
         // support it here, because we always need a contentType.
@@ -84,6 +92,10 @@ namespace System.IO.Packaging.FlatOpc
             //     throw new NotSupportedException("CompressionOption is not supported: " + compressionOption);
 
             _package = package;
+
+            // We remember these so we can use them while the part gets disposed.
+            _partUri = partUri;
+            _partContentType = contentType;
         }
         
         /// <summary>
@@ -102,14 +114,29 @@ namespace System.IO.Packaging.FlatOpc
                 // access requested. This is required to write the existing part
                 // to the stream. Write PartDocument to stream if it is not empty.
                 stream = new FlatOpcPackagePartStream(this, FileAccess.ReadWrite);
-                if (PartDocument != null && PartDocument.Root != null)
+                if (ContentType.EndsWith("xml"))
                 {
-                    PartDocument.Save(stream);
-                    stream.Position = 0;
+                    if (PartDocument != null && PartDocument.Root != null)
+                    {
+                        PartDocument.Save(stream);
+                        stream.Position = 0;
+                    }
+                    else if (mode == FileMode.Open)
+                    {
+                        throw new IOException("Part is empty.");
+                    }
                 }
-                else if (mode == FileMode.Open)
+                else
                 {
-                    throw new IOException("Part is empty.");
+                    if (PartBinaryData != null)
+                    {
+                        stream.Write(PartBinaryData, 0, PartBinaryData.Length);
+                        stream.Position = 0;
+                    }
+                    else if (mode == FileMode.Open)
+                    {
+                        throw new IOException("Part is empty.");
+                    }
                 }
 
                 // Set the desired access level, i.e., possibly reducing it to
@@ -118,13 +145,21 @@ namespace System.IO.Packaging.FlatOpc
             }
             else if (mode == FileMode.Create)
             {
-                PartDocument = null;
+                if (ContentType.EndsWith("xml"))
+                    PartDocument = null;
+                else
+                    PartBinaryData = null;
+
                 stream = new FlatOpcPackagePartStream(this, access);
             }
             else if (mode == FileMode.CreateNew)
             {
-                if (PartDocument != null)
-                    throw new IOException("Part is not empty.");
+                if (ContentType.EndsWith("xml"))
+                    if (PartDocument != null)
+                        throw new IOException("XML part is not empty.");
+                else 
+                    if (PartBinaryData != null)
+                        throw new IOException("Binary part is not empty.");
 
                 stream = new FlatOpcPackagePartStream(this, access);
             }
@@ -133,6 +168,30 @@ namespace System.IO.Packaging.FlatOpc
                 throw new IOException("Unsupported FileMode: " + mode);
             }
             return stream;
+        }
+
+        /// <summary>
+        /// Gets or sets the root <see cref="XElement"/> of the <see cref="XDocument"/>
+        /// contained in this part. This is used by FlatOpcPackage to initialize this
+        /// FlatOpcPackagePart in case the content type is XML.
+        /// </summary>
+        internal XElement RootElement
+        {
+            get
+            {
+                if (_partDocument != null)
+                    return _partDocument.Root;
+                else
+                    return null;
+            }
+
+            set
+            {
+                if (!ContentType.EndsWith("xml"))
+                    throw new ArgumentException("Can't set the RootElement if content type is '" + ContentType + "'");
+
+                PartDocument = new XDocument(_declaration, value);
+            }
         }
 
         /// <summary>
@@ -147,32 +206,55 @@ namespace System.IO.Packaging.FlatOpc
 
             set
             {
+                if (!ContentType.EndsWith("xml"))
+                    throw new ArgumentException("Can't set PartDocument if content type is '" + ContentType + "'");
+
                 _partDocument = value;
-                _partElement = new XElement(pkg + "part",
-                    new XAttribute(pkg + "name", Uri),
-                    new XAttribute(pkg + "contentType", ContentType),
-                    new XElement(pkg + "xmlData",
-                        RootElement));
+
+                // This is the eager initialization variant.
+                //_partElement = new XElement(pkg + "part",
+                //    new XAttribute(pkg + "name", Uri),
+                //    new XAttribute(pkg + "contentType", ContentType),
+                //    new XElement(pkg + "xmlData",
+                //        RootElement));
             }
         }
 
-        /// <summary>
-        /// Gets or sets the root <see cref="XElement"/> of the <see cref="XDocument"/>
-        /// contained in this part.
-        /// </summary>
-        internal XElement RootElement
+        internal byte[] PartBinaryData
         {
             get
             {
-                if (_partDocument != null)
-                    return _partDocument.Root;
-                else
-                    return null;
+                return _partBinaryData;
             }
 
             set
             {
-                PartDocument = new XDocument(_declaration, value);
+                if (ContentType.EndsWith("xml"))
+                    throw new ArgumentException("Can't set PartDocument if content type is '" + ContentType + "'");
+
+                _partBinaryData = value;
+
+                // This is the eager initialization variant.
+                //// The following expression creates the base64String, then chunks
+                //// it to lines of 76 characters long.
+                //string base64String = System.Convert.ToBase64String(_partBinaryData)
+                //    .Select((c, i) => new { Character = c, Chunk = i / 76 })
+                //    .GroupBy(c => c.Chunk)
+                //    .Aggregate(
+                //        new StringBuilder(),
+                //        (s, i) =>
+                //            s.Append(
+                //                i.Aggregate(
+                //                    new StringBuilder(),
+                //                    (seed, it) => seed.Append(it.Character),
+                //                    sb => sb.ToString())).Append(Environment.NewLine),
+                //        s => s.ToString());
+
+                //_partElement =  new XElement(pkg + "part",
+                //    new XAttribute(pkg + "name", Uri),
+                //    new XAttribute(pkg + "contentType", ContentType),
+                //    new XAttribute(pkg + "compression", "store"),
+                //    new XElement(pkg + "binaryData", base64String));
             }
         }
 
@@ -185,7 +267,41 @@ namespace System.IO.Packaging.FlatOpc
         {
             get
             {
-                return _partElement;
+                // This is the lazy/late initialization variant.
+                if (_partContentType.EndsWith("xml"))
+                {
+                    return new XElement(pkg + "part",
+                        new XAttribute(pkg + "name", _partUri),
+                        new XAttribute(pkg + "contentType", _partContentType),
+                        new XElement(pkg + "xmlData",
+                            RootElement));
+                }
+                else
+                {
+                    // The following expression creates the base64String, then chunks
+                    // it to lines of 76 characters long.
+                    string base64String = System.Convert.ToBase64String(_partBinaryData)
+                        .Select((c, i) => new { Character = c, Chunk = i / 76 })
+                        .GroupBy(c => c.Chunk)
+                        .Aggregate(
+                            new StringBuilder(),
+                            (s, i) =>
+                                s.Append(
+                                    i.Aggregate(
+                                        new StringBuilder(),
+                                        (seed, it) => seed.Append(it.Character),
+                                        sb => sb.ToString())).Append(Environment.NewLine),
+                            s => s.ToString());
+
+                    return new XElement(pkg + "part",
+                        new XAttribute(pkg + "name", _partUri),
+                        new XAttribute(pkg + "contentType", _partContentType),
+                        new XAttribute(pkg + "compression", "store"),
+                        new XElement(pkg + "binaryData", base64String));
+                }
+
+                // This is the old code used when we did eager initialization.
+                // return _partElement;
             }
         }
     }
