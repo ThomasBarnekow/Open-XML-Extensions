@@ -26,6 +26,8 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 
+using System.IO.Packaging.Extensions;
+
 namespace System.IO.Packaging.FlatOpc
 {
     /// <summary>
@@ -78,6 +80,8 @@ namespace System.IO.Packaging.FlatOpc
             if (streaming)
                 throw new IOException("Streaming is currently not supported");
         }
+
+        #region Open
 
         /// <summary>
         /// Opens a package from an <see cref="XDocument"/>. 
@@ -189,6 +193,81 @@ namespace System.IO.Packaging.FlatOpc
             return package;
         }
 
+        #endregion Open
+
+        #region Conversion
+
+        #region Conversion from Package
+
+        /// <summary>
+        /// Converts the given Package to a FlatOpcPackage 
+        /// </summary>
+        /// <param name="package"></param>
+        /// <returns></returns>
+        public static FlatOpcPackage FromPackage(Package package)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static FlatOpcPackage FromPackage(Package package, string path, FileMode packageMode, FileAccess packageAccess, FileShare packageShare)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static FlatOpcPackage FromPackage(Package package, Stream stream, FileMode packageMode, FileAccess packageAccess)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion Conversion from Package
+
+        #region Conversion to Package
+
+        /// <summary>
+        /// Converts this FlatOpcPackage to a Package having the given PhysicalPackageType. 
+        /// The Package is backed by a MemoryStream and opened in ReadWrite mode.
+        /// </summary>
+        /// <param name="packageType">The physical package type.</param>
+        /// <returns>A new instance of Package corresponding to the given physical package type.</returns>
+        public Package ToPackage(PhysicalPackageType packageType)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Package ToPackage(string path, FileMode packageMode, FileAccess packageAccess, FileShare packageShare, PhysicalPackageType packageType)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Package ToPackage(Stream stream, FileMode packageMode, FileAccess packageAccess, PhysicalPackageType packageType)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion Conversion to Package
+
+        #region Conversion from and to string
+
+        public static FlatOpcPackage FromString(string text)
+        {
+            return Open(XDocument.Parse(text));
+        }
+
+        /// <summary>
+        /// Returns a a Flat OPC string.
+        /// </summary>
+        /// <returns>A Flat OPC string.</returns>
+        public override string ToString()
+        {
+            return Document.ToString();
+        }
+
+        #endregion 
+
+        #endregion Conversion
+
+        #region Private methods
+
         /// <summary>
         /// Initializes this FlatOpcPackage.
         /// </summary>
@@ -263,6 +342,10 @@ namespace System.IO.Packaging.FlatOpc
             }
         }
 
+        #endregion Private methods
+
+        #region XDocument representations
+
         /// <summary>
         /// Gets the Flat OPC <see cref="XDocument"/> represented by this Package.
         /// </summary>
@@ -284,6 +367,8 @@ namespace System.IO.Packaging.FlatOpc
                     throw new ArgumentNullException("Document");
                 if (value.Root.Name != pkg + "package")
                     throw new ArgumentException("Not a Flat OPC document", "Document");
+
+                _partList.Clear();
 
                 _processingInstruction = value.Nodes()
                     .Where(n => n.NodeType == XmlNodeType.ProcessingInstruction)
@@ -314,6 +399,10 @@ namespace System.IO.Packaging.FlatOpc
                 }
             }
         }
+
+        #endregion XDocument representations
+
+        #region Package override methods
 
         /// <summary>
         /// Creates a new <see cref="FlatOpcPackagePart"/> with the given part 
@@ -419,6 +508,8 @@ namespace System.IO.Packaging.FlatOpc
                 base.Dispose(disposing);
             }
         }
+
+        #endregion Package override methods
     }
 
     /// <summary>

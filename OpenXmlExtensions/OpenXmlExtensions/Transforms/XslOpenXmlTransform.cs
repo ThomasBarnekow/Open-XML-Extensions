@@ -26,22 +26,30 @@ using System.Text;
 using System.Xml;
 using System.Xml.Xsl;
 
+using DocumentFormat.OpenXml.Packaging;
+
 namespace DocumentFormat.OpenXml.Transforms
 {
-    public class XslOpenXmlTransform : FlatOpcStringTransform
+    /// <summary>
+    /// This class uses XSL Stylesheets to perform Open XML transforms.
+    /// </summary>
+    /// <typeparam name="DocumentType">A subclass of <see cref="OpenXmlPackage"/>.</typeparam>
+    public class XslOpenXmlTransform<DocumentType> : FlatOpcStringTransform<DocumentType>
+        where DocumentType : OpenXmlPackage
     {
         /// <summary>
-        /// Constructor.
+        /// Initializes a new instance of the <see cref="XslOpenXmlTransform{DocumentType}"/> class.
         /// </summary>
         public XslOpenXmlTransform()
             : base()
         { }
 
         /// <summary>
-        /// Constructor.
+        /// Initializes a new instance of the <see cref="XslOpenXmlTransform{DocumentType}"/> class 
+        /// with a <see cref="XslCompiledTransform"/> and an <see cref="XsltArgumentList"/>.
         /// </summary>
-        /// <param name="xslt">The compiled XSL transform</param>
-        /// <param name="arguments">The arguments to be passed to the compiled XSL transform</param>
+        /// <param name="xslt">The compiled XSL transform.</param>
+        /// <param name="arguments">The arguments to be passed to the compiled XSL transform.</param>
         public XslOpenXmlTransform(XslCompiledTransform xslt, XsltArgumentList arguments)
             : this()
         {
@@ -61,9 +69,9 @@ namespace DocumentFormat.OpenXml.Transforms
 
         /// <summary>
         /// Transforms the XML string using the <see cref="XslCompiledTransform"/>
-        /// defined by the instance's <see cref="XslOpenXmlTransform.Xslt"/> property
-        /// and the <see cref="XsltArgumentList"/> defined in the instance's
-        /// <see cref="XslOpenXmlTransform.Arguments"/> property. 
+        /// defined by the instance's <see cref="XslOpenXmlTransform{DocumentType}.Xslt"/> 
+        /// property and the <see cref="XsltArgumentList"/> defined in the instance's
+        /// <see cref="XslOpenXmlTransform{DocumentType}.Arguments"/> property. 
         /// </summary>
         /// <param name="xml">The XML string to be transformed</param>
         /// <returns>The transformed XML string</returns>

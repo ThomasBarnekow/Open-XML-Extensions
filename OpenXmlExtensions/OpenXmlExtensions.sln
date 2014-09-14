@@ -16,6 +16,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{15A63B
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PackagingExtensions", "PackagingExtensions\PackagingExtensions.csproj", "{D552F4C5-4B68-4780-A192-E8729D48A262}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Open-XML-SDK", "..\..\Open-XML-SDK\Open-XML-SDK.csproj", "{55FB0A8A-B816-4DC9-9BB4-4DB5B5950F5A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -78,6 +80,16 @@ Global
 		{D552F4C5-4B68-4780-A192-E8729D48A262}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{D552F4C5-4B68-4780-A192-E8729D48A262}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{D552F4C5-4B68-4780-A192-E8729D48A262}.Release|x86.ActiveCfg = Release|Any CPU
+		{55FB0A8A-B816-4DC9-9BB4-4DB5B5950F5A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{55FB0A8A-B816-4DC9-9BB4-4DB5B5950F5A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{55FB0A8A-B816-4DC9-9BB4-4DB5B5950F5A}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{55FB0A8A-B816-4DC9-9BB4-4DB5B5950F5A}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{55FB0A8A-B816-4DC9-9BB4-4DB5B5950F5A}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{55FB0A8A-B816-4DC9-9BB4-4DB5B5950F5A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{55FB0A8A-B816-4DC9-9BB4-4DB5B5950F5A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{55FB0A8A-B816-4DC9-9BB4-4DB5B5950F5A}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{55FB0A8A-B816-4DC9-9BB4-4DB5B5950F5A}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{55FB0A8A-B816-4DC9-9BB4-4DB5B5950F5A}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
