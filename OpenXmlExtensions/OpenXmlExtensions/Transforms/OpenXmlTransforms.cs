@@ -306,10 +306,79 @@ namespace DocumentFormat.OpenXml.Transforms
             Template = template;
         }
 
+        #region Properties
+
+        private WordprocessingDocument _template = null;
+
         /// <summary>
         /// Gets or sets the template <see cref="WordprocessingDocument"/>.
         /// </summary>
-        public virtual WordprocessingDocument Template { get; set; }
+        public virtual WordprocessingDocument Template 
+        {
+            get
+            {
+                return _template;
+            }
+
+            set
+            { 
+                // Check template's validity. A "minimum document" must have at least
+                // a MainDocumentPart with a w:document element that has a w:body child.
+                if (value.MainDocumentPart == null || 
+                    value.MainDocumentPart.Document == null ||
+                    value.MainDocumentPart.Document.Body == null)
+                {
+                    throw new ArgumentException("Illegal WordprocessingDocument");
+                }
+                _template = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets the template's w:body element. Returns null if no template was specified.
+        /// </summary>
+        protected virtual Body TemplateBody
+        {
+            get
+            {
+                if (Template != null)
+                    return Template.MainDocumentPart.Document.Body;
+
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Gets the template's w:styles element. Returns null if no template was specified
+        /// or there is no w:styles element.
+        /// </summary>
+        protected virtual Styles TemplateStyles
+        {
+            get
+            {
+                if (Template != null && Template.MainDocumentPart.StyleDefinitionsPart != null)
+                    return Template.MainDocumentPart.StyleDefinitionsPart.Styles;
+
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Gets the template's w:numbering element. Returns null if no template was specified
+        /// or there is no w:numbering element.
+        /// </summary>
+        protected virtual Numbering TemplateNumbering
+        {
+            get
+            { 
+                if (Template != null && Template.MainDocumentPart.NumberingDefinitionsPart != null)
+                    return Template.MainDocumentPart.NumberingDefinitionsPart.Numbering;
+
+                return null;
+            }
+        }
+
+        #endregion Properties
 
         /// <summary>
         /// Transforms a Flat OPC string.
@@ -335,8 +404,22 @@ namespace DocumentFormat.OpenXml.Transforms
             if (document == null)
                 return null;
 
-            using (WordprocessingDocument wordDoc = WordprocessingDocument.FromFlatOpcDocument(document))
-                return TransformInPlace(wordDoc).ToFlatOpcDocument();
+            using (WordprocessingDocument packageDocument = WordprocessingDocument.FromFlatOpcDocument(document))
+                return TransformInPlace(packageDocument).ToFlatOpcDocument();
+        }
+
+
+        /// <summary>
+        /// Transforms a <see cref="WordprocessingDocument"/>.
+        /// </summary>
+        /// <param name="packageDocument">The document to be transformed.</param>
+        /// <returns>The cloned and transformed document.</returns>
+        public sealed override WordprocessingDocument Transform(WordprocessingDocument packageDocument)
+        {
+            if (packageDocument == null)
+                return null;
+
+            return TransformInPlace((WordprocessingDocument)packageDocument.Clone());
         }
 
         #region Document
@@ -362,21 +445,21 @@ namespace DocumentFormat.OpenXml.Transforms
         ///     
         /// method.
         /// </remarks>
-        /// <param name="wordDoc">The <see cref="WordprocessingDocument"/> to be transformed in-place.</param>
+        /// <param name="packageDocument">The <see cref="WordprocessingDocument"/> to be transformed in-place.</param>
         /// <returns>The transformed <see cref="WordprocessingDocument"/>.</returns>
-        protected WordprocessingDocument TransformDocument(WordprocessingDocument wordDoc)
+        protected WordprocessingDocument TransformDocument(WordprocessingDocument packageDocument)
         {
-            MainDocumentPart part = wordDoc.MainDocumentPart;
+            MainDocumentPart part = packageDocument.MainDocumentPart;
             if (part != null)
             {
-                part.Document = (Document)TransformDocument(part.Document, wordDoc);
+                part.Document = (Document)TransformDocument(part.Document, packageDocument);
             }
             else
             {
-                part = wordDoc.AddMainDocumentPart();
-                part.Document = CreateDocument(wordDoc);
+                part = packageDocument.AddMainDocumentPart();
+                part.Document = CreateDocument(packageDocument);
             }
-            return wordDoc;
+            return packageDocument;
         }
 
         /// <summary>
@@ -388,9 +471,9 @@ namespace DocumentFormat.OpenXml.Transforms
         /// a deep clone of the <see cref="OpenXmlElement"/>.
         /// </remarks>
         /// <param name="element">The <see cref="OpenXmlElement"/> to be transformed.</param>
-        /// <param name="wordDoc">The <see cref="WordprocessingDocument"/> to be transformed in-place.</param>
+        /// <param name="packageDocument">The <see cref="WordprocessingDocument"/> to be transformed in-place.</param>
         /// <returns>The transformed <see cref="OpenXmlElement"/>.</returns>
-        protected virtual object TransformDocument(OpenXmlElement element, WordprocessingDocument wordDoc)
+        protected virtual object TransformDocument(OpenXmlElement element, WordprocessingDocument packageDocument)
         {
             return element.CloneNode(true);
         }
@@ -404,9 +487,9 @@ namespace DocumentFormat.OpenXml.Transforms
         /// <see cref="Document"/> tree in case the <see cref="MainDocumentPart"/>
         /// was previously empty.
         /// </remarks>
-        /// <param name="wordDoc">The <see cref="WordprocessingDocument"/> to be transformed.</param>
+        /// <param name="packageDocument">The <see cref="WordprocessingDocument"/> to be transformed.</param>
         /// <returns>A new instance of <see cref="Document"/>.</returns>
-        protected virtual Document CreateDocument(WordprocessingDocument wordDoc)
+        protected virtual Document CreateDocument(WordprocessingDocument packageDocument)
         {
             return new Document(new Body());
         }
@@ -442,26 +525,26 @@ namespace DocumentFormat.OpenXml.Transforms
         ///     
         /// method.
         /// </remarks>
-        /// <param name="wordDoc">The <see cref="WordprocessingDocument"/> to be transformed in-place.</param>
+        /// <param name="packageDocument">The <see cref="WordprocessingDocument"/> to be transformed in-place.</param>
         /// <returns>The transformed <see cref="WordprocessingDocument"/>.</returns>
-        protected WordprocessingDocument TransformStyles(WordprocessingDocument wordDoc)
+        protected WordprocessingDocument TransformStyles(WordprocessingDocument packageDocument)
         {
             // Transform the StyleDefinitionsPart's root element.
-            StyleDefinitionsPart part = wordDoc.MainDocumentPart.StyleDefinitionsPart;
+            StyleDefinitionsPart part = packageDocument.MainDocumentPart.StyleDefinitionsPart;
             if (part != null)
             {
                 // The WordprocessingDocument has a StyleDefinitionsPart.
                 // So, we transform its root element and either replace the existing
                 // root element or, if the transformation results in a null element,
                 // delete the StyleDefinitionsPart.
-                Styles styles = (Styles)TransformStyles(part.Styles, wordDoc);
+                Styles styles = (Styles)TransformStyles(part.Styles, packageDocument);
                 if (styles != null)
                 {
                     part.Styles = styles;
                 }
                 else
                 {
-                    wordDoc.MainDocumentPart.DeletePart(part);
+                    packageDocument.MainDocumentPart.DeletePart(part);
                     part = null;
                 }
             }
@@ -470,28 +553,28 @@ namespace DocumentFormat.OpenXml.Transforms
                 // The WordprocessingDocument does not have a StyleDefinitionsPart.
                 // If the transform produces a non-null root element, we add a new
                 // StyleDefinitionsPart with that root element.
-                Styles styles = CreateStyles(wordDoc);
+                Styles styles = CreateStyles(packageDocument);
                 if (styles != null)
                 {
-                    part = wordDoc.MainDocumentPart.AddNewPart<StyleDefinitionsPart>();
+                    part = packageDocument.MainDocumentPart.AddNewPart<StyleDefinitionsPart>();
                     part.Styles = styles;
                 }
             }
 
             // Make sure the StylesWithEffectPart equals the StyleDefinitionsPart.
-            StylesWithEffectsPart effectsPart = wordDoc.MainDocumentPart.StylesWithEffectsPart;
+            StylesWithEffectsPart effectsPart = packageDocument.MainDocumentPart.StylesWithEffectsPart;
             if (part != null)
             {
                 if (effectsPart == null)
-                    effectsPart = wordDoc.MainDocumentPart.AddNewPart<StylesWithEffectsPart>();
+                    effectsPart = packageDocument.MainDocumentPart.AddNewPart<StylesWithEffectsPart>();
                 effectsPart.Styles = (Styles)part.Styles.CloneNode(true);
             }
             else if (effectsPart != null)
             {
-                wordDoc.MainDocumentPart.DeletePart(effectsPart);
+                packageDocument.MainDocumentPart.DeletePart(effectsPart);
             }
 
-            return wordDoc;
+            return packageDocument;
         }
 
         /// <summary>
@@ -503,9 +586,9 @@ namespace DocumentFormat.OpenXml.Transforms
         /// implementation produces a deep clone of the <see cref="OpenXmlElement"/>.
         /// </remarks>
         /// <param name="element">The <see cref="OpenXmlElement"/> to be transformed.</param>
-        /// <param name="wordDoc">The <see cref="WordprocessingDocument"/> to be transformed.</param>
+        /// <param name="packageDocument">The <see cref="WordprocessingDocument"/> to be transformed.</param>
         /// <returns>The transformed <see cref="OpenXmlElement"/>.</returns>
-        protected virtual object TransformStyles(OpenXmlElement element, WordprocessingDocument wordDoc)
+        protected virtual object TransformStyles(OpenXmlElement element, WordprocessingDocument packageDocument)
         {
             return element.CloneNode(true);
         }
@@ -520,9 +603,9 @@ namespace DocumentFormat.OpenXml.Transforms
         /// tree. If null is returned, the <see cref="StyleDefinitionsPart"/> will not be created.
         /// This is the default.
         /// </remarks>
-        /// <param name="wordDoc">The <see cref="WordprocessingDocument"/> to be transformed.</param>
+        /// <param name="packageDocument">The <see cref="WordprocessingDocument"/> to be transformed.</param>
         /// <returns>A new instance of <see cref="Styles"/> or null.</returns>
-        protected virtual Styles CreateStyles(WordprocessingDocument wordDoc)
+        protected virtual Styles CreateStyles(WordprocessingDocument packageDocument)
         {
             return null;
         }
@@ -554,29 +637,29 @@ namespace DocumentFormat.OpenXml.Transforms
         ///     
         /// method.
         /// </remarks>
-        /// <param name="wordDoc">The <see cref="WordprocessingDocument"/> to be transformed in-place.</param>
+        /// <param name="packageDocument">The <see cref="WordprocessingDocument"/> to be transformed in-place.</param>
         /// <returns>The transformed <see cref="WordprocessingDocument"/>.</returns>
-        protected WordprocessingDocument TransformNumbering(WordprocessingDocument wordDoc)
+        protected WordprocessingDocument TransformNumbering(WordprocessingDocument packageDocument)
         {
-            NumberingDefinitionsPart part = wordDoc.MainDocumentPart.NumberingDefinitionsPart;
+            NumberingDefinitionsPart part = packageDocument.MainDocumentPart.NumberingDefinitionsPart;
             if (part != null)
             {
-                Numbering numbering = (Numbering)TransformNumbering(part.Numbering, wordDoc);
+                Numbering numbering = (Numbering)TransformNumbering(part.Numbering, packageDocument);
                 if (numbering != null)
                     part.Numbering = numbering;
                 else
-                    wordDoc.MainDocumentPart.DeletePart(part);
+                    packageDocument.MainDocumentPart.DeletePart(part);
             }
             else
             {
-                Numbering numbering = CreateNumbering(wordDoc);
+                Numbering numbering = CreateNumbering(packageDocument);
                 if (numbering != null)
                 {
-                    part = wordDoc.MainDocumentPart.AddNewPart<NumberingDefinitionsPart>();
+                    part = packageDocument.MainDocumentPart.AddNewPart<NumberingDefinitionsPart>();
                     part.Numbering = numbering;
                 }
             }
-            return wordDoc;
+            return packageDocument;
         }
 
         /// <summary>
@@ -588,9 +671,9 @@ namespace DocumentFormat.OpenXml.Transforms
         /// implementation just produces a deep clone of the <see cref="OpenXmlElement"/>.
         /// </remarks>
         /// <param name="element">The <see cref="OpenXmlElement"/> to be transformed.</param>
-        /// <param name="wordDoc">The <see cref="WordprocessingDocument"/> to be transformed.</param>
+        /// <param name="packageDocument">The <see cref="WordprocessingDocument"/> to be transformed.</param>
         /// <returns>The transformed <see cref="OpenXmlElement"/>.</returns>
-        protected virtual object TransformNumbering(OpenXmlElement element, WordprocessingDocument wordDoc)
+        protected virtual object TransformNumbering(OpenXmlElement element, WordprocessingDocument packageDocument)
         {
             return element.CloneNode(true);
         }
@@ -605,9 +688,9 @@ namespace DocumentFormat.OpenXml.Transforms
         /// tree. If null is returned, the <see cref="NumberingDefinitionsPart"/> will not be created.
         /// This is the default.
         /// </remarks>
-        /// <param name="wordDoc">The <see cref="WordprocessingDocument"/> to be transformed.</param>
+        /// <param name="packageDocument">The <see cref="WordprocessingDocument"/> to be transformed.</param>
         /// <returns>A new instance of <see cref="Numbering"/> or null.</returns>
-        protected virtual Numbering CreateNumbering(WordprocessingDocument wordDoc)
+        protected virtual Numbering CreateNumbering(WordprocessingDocument packageDocument)
         {
             return null;
         }
