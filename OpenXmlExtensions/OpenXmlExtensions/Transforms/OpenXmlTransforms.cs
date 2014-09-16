@@ -72,49 +72,13 @@ namespace DocumentFormat.OpenXml.Transforms
         where DocumentType : OpenXmlPackage
     {
         /// <summary>
-        /// Creates a new instance of DocumentType from a Flat OPC string.
-        /// </summary>
-        /// <param name="text">The Flat OPC string.</param>
-        /// <returns>A new instance of DocumentType</returns>
-        protected static DocumentType FromFlatOpcString(string text)
-        {
-            Type t = typeof(DocumentType);
-            if (t == typeof(WordprocessingDocument))
-                return WordprocessingDocument.FromFlatOpcString(text) as DocumentType;
-            else if (t == typeof(SpreadsheetDocument))
-                return SpreadsheetDocument.FromFlatOpcString(text) as DocumentType;
-            else if (t == typeof(PresentationDocument))
-                return PresentationDocument.FromFlatOpcString(text) as DocumentType;
-            else
-                throw new OpenXmlTransformException("Unsupported document type: " + t);
-        }
-
-        /// <summary>
-        /// Creates a new instance of DocumentType from a Flat OPC <see cref="XDocument"/>.
-        /// </summary>
-        /// <param name="document">The Flat OPC <see cref="XDocument"/>.</param>
-        /// <returns>A new instance of DocumentType</returns>
-        protected static DocumentType FromFlatOpcDocument(XDocument document)
-        {
-            Type t = typeof(DocumentType);
-            if (t == typeof(WordprocessingDocument))
-                return WordprocessingDocument.FromFlatOpcDocument(document) as DocumentType;
-            else if (t == typeof(SpreadsheetDocument))
-                return SpreadsheetDocument.FromFlatOpcDocument(document) as DocumentType;
-            else if (t == typeof(PresentationDocument))
-                return PresentationDocument.FromFlatOpcDocument(document) as DocumentType;
-            else
-                throw new OpenXmlTransformException("Unsupported document type: " + t);
-        }
-
-        /// <summary>
         /// Transforms a Flat OPC string.
         /// </summary>
-        /// <param name="xml">The Flat OPC string to be transformed.</param>
+        /// <param name="text">The Flat OPC string to be transformed.</param>
         /// <returns>The transformed Flat OPC string.</returns>
-        public virtual string Transform(string xml)
+        public virtual string Transform(string text)
         {
-            return xml;
+            return text;
         }
 
         /// <summary>
@@ -199,7 +163,7 @@ namespace DocumentFormat.OpenXml.Transforms
                 return null;
 
             string result = Transform(packageDocument.ToFlatOpcString());
-            return FromFlatOpcString(result);
+            return TransformTools.FromFlatOpcString<DocumentType>(result);
         }
 
         /// <summary>
@@ -231,14 +195,14 @@ namespace DocumentFormat.OpenXml.Transforms
         /// <summary>
         /// Transforms a Flat OPC string.
         /// </summary>
-        /// <param name="xml">The Flat OPC string to be transformed.</param>
+        /// <param name="text">The Flat OPC string to be transformed.</param>
         /// <returns>The transformed Flat OPC string.</returns>
-        public sealed override string Transform(string xml)
+        public sealed override string Transform(string text)
         {
-            if (xml == null)
+            if (text == null)
                 return null;
 
-            XDocument result = Transform(XDocument.Parse(xml));
+            XDocument result = Transform(XDocument.Parse(text));
             return result.ToString();
         }
 
@@ -253,7 +217,7 @@ namespace DocumentFormat.OpenXml.Transforms
                 return null;
 
             XDocument result = Transform(packageDocument.ToFlatOpcDocument());
-            return FromFlatOpcDocument(result);
+            return TransformTools.FromFlatOpcDocument<DocumentType>(result);
         }
 
         /// <summary>
@@ -272,12 +236,61 @@ namespace DocumentFormat.OpenXml.Transforms
 
     /// <summary>
     /// This class should be subclassed by concrete transforms that perform their specific
+    /// transformation task on instances of <see cref="OpenXmlPackage"/> or, more specifically,
+    /// instances of its subclasses.
+    /// </summary>
+    /// <remarks>
+    /// Subclasses must override <see cref="OpenXmlTransform{DocumentType}.TransformInPlace"/>.
+    /// The other methods will delegate the actual transformation to this method.
+    /// </remarks>
+    public abstract class OpenXmlPackageTransform<DocumentType> : OpenXmlTransform<DocumentType>
+        where DocumentType : OpenXmlPackage
+    {
+        /// <summary>
+        /// Transforms a Flat OPC string.
+        /// </summary>
+        /// <param name="text">The Flat OPC string to be transformed.</param>
+        /// <returns>The transformed Flat OPC string.</returns>
+        public sealed override string Transform(string text)
+        {
+            if (text == null)
+                return null;
+
+            using (DocumentType packageDocument = TransformTools.FromFlatOpcString<DocumentType>(text))
+                return TransformInPlace(packageDocument).ToFlatOpcString();
+        }
+
+        /// <summary>
+        /// Transforms a Flat OPC <see cref="XDocument"/>.
+        /// </summary>
+        /// <param name="document">The Flat OPC <see cref="XDocument"/> to be transformed.</param>
+        /// <returns>The transformed Flat OPC <see cref="XDocument"/>.</returns>
+        public sealed override XDocument Transform(XDocument document)
+        {
+            if (document == null)
+                return null;
+
+            using (DocumentType packageDocument = TransformTools.FromFlatOpcDocument<DocumentType>(document))
+                return TransformInPlace(packageDocument).ToFlatOpcDocument();
+        }
+
+        /// <summary>
+        /// Transforms an Open XML package document.
+        /// </summary>
+        /// <param name="packageDocument">The document to be transformed.</param>
+        /// <returns>The cloned and transformed document.</returns>
+        public sealed override DocumentType Transform(DocumentType packageDocument)
+        {
+            if (packageDocument == null)
+                return null;
+
+            return TransformInPlace((DocumentType)packageDocument.Clone());
+        }
+    }
+
+    /// <summary>
+    /// This class should be subclassed by concrete transforms that perform their specific
     /// transformation task on instances of <see cref="WordprocessingDocument"/>.
-    /// Derived classes are supposed to override the 
-    /// 
-    ///     <see cref="OpenXmlTransform{DocumentType}.TransformInPlace"/> 
-    ///     
-    /// method.
     /// </summary>
     /// <remarks>
     /// Subclasses must override <see cref="OpenXmlTransform{DocumentType}.TransformInPlace"/>.
@@ -286,7 +299,7 @@ namespace DocumentFormat.OpenXml.Transforms
     /// <see cref="Styles"/>, and <see cref="Numbering"/>. More methods can and will be added
     /// as the need arises.
     /// </remarks>
-    public abstract class WordprocessingDocumentTransform : OpenXmlTransform<WordprocessingDocument>
+    public abstract class WordprocessingDocumentTransform : OpenXmlPackageTransform<WordprocessingDocument>
     {
         /// <summary>
         /// Initializes a new instance of <see cref="WordprocessingDocumentTransform"/>.
@@ -379,48 +392,6 @@ namespace DocumentFormat.OpenXml.Transforms
         }
 
         #endregion Properties
-
-        /// <summary>
-        /// Transforms a Flat OPC string.
-        /// </summary>
-        /// <param name="xml">The Flat OPC string to be transformed.</param>
-        /// <returns>The transformed Flat OPC string.</returns>
-        public sealed override string Transform(string xml)
-        {
-            if (xml == null)
-                return null;
-
-            using (WordprocessingDocument document = WordprocessingDocument.FromFlatOpcString(xml))
-                return TransformInPlace(document).ToFlatOpcString();
-        }
-
-        /// <summary>
-        /// Transforms a Flat OPC <see cref="XDocument"/>.
-        /// </summary>
-        /// <param name="document">The Flat OPC <see cref="XDocument"/> to be transformed.</param>
-        /// <returns>The transformed Flat OPC <see cref="XDocument"/>.</returns>
-        public sealed override XDocument Transform(XDocument document)
-        {
-            if (document == null)
-                return null;
-
-            using (WordprocessingDocument packageDocument = WordprocessingDocument.FromFlatOpcDocument(document))
-                return TransformInPlace(packageDocument).ToFlatOpcDocument();
-        }
-
-
-        /// <summary>
-        /// Transforms a <see cref="WordprocessingDocument"/>.
-        /// </summary>
-        /// <param name="packageDocument">The document to be transformed.</param>
-        /// <returns>The cloned and transformed document.</returns>
-        public sealed override WordprocessingDocument Transform(WordprocessingDocument packageDocument)
-        {
-            if (packageDocument == null)
-                return null;
-
-            return TransformInPlace((WordprocessingDocument)packageDocument.Clone());
-        }
 
         #region Document
 
