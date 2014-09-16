@@ -42,7 +42,18 @@ namespace DocumentFormat.OpenXml.Transforms
     public interface IXmlToOpenXmlTransform<DocumentType>
         where DocumentType : OpenXmlPackage
     {
+        /// <summary>
+        /// Transforms a generic XML string to an Open XML document.
+        /// </summary>
+        /// <param name="text">The XML string.</param>
+        /// <returns>The Open XML document.</returns>
         DocumentType ToOpenXml(string text);
+
+        /// <summary>
+        /// Transforms a generic <see cref="XDocument"/> into an Open XML document.
+        /// </summary>
+        /// <param name="document">The <see cref="XDocument"/>.</param>
+        /// <returns>The Open XML document.</returns>
         DocumentType ToOpenXml(XDocument document);
     }
 
