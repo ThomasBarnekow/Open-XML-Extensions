@@ -36,33 +36,6 @@ namespace DocumentFormat.OpenXml.Extensions
     /// </summary>
     public static class WordprocessingDocumentExtensions
     {
-        ///// <summary>
-        ///// Replaces the document's contents with the contents of the given replacement's contents.
-        ///// </summary>
-        ///// <param name="document">The destination document</param>
-        ///// <param name="replacement">The source document</param>
-        ///// <returns>The original document with replaced contents</returns>
-        //public static WordprocessingDocument ReplaceWith(this WordprocessingDocument document, 
-        //    WordprocessingDocument replacement)
-        //{
-        //    if (document == null)
-        //        throw new ArgumentNullException("document");
-        //    if (replacement == null)
-        //        throw new ArgumentNullException("replacement");
-
-        //    // Delete all parts (i.e., the direct relationship targets and their
-        //    // children).
-        //    document.DeleteParts(document.GetPartsOfType<OpenXmlPart>());
-
-        //    // Add the replacement's parts to the document.
-        //    foreach (var part in replacement.Parts)
-        //        document.AddPart(part.OpenXmlPart, part.RelationshipId);
-
-        //    // Save and return.
-        //    document.Package.Flush();
-        //    return document;
-        //}
-
         /// <summary>
         /// Returns the <see cref="CustomXmlPart"/> having a root element with the given <see cref="XNamespace"/> 
         /// or null if there is no such <see cref="CustomXmlPart"/>.

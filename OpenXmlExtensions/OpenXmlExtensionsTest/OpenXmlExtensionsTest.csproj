@@ -51,6 +51,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CreateFromTemplateTests.cs" />
     <Compile Include="FlatOpcTests.cs" />
     <Compile Include="FlatOpcPackageTests.cs" />
     <Compile Include="SaveAndCloneTests.cs" />
@@ -79,7 +80,10 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Document.docx" />
+    <Content Include="Document.dotx" />
     <None Include="packages.config" />
+    <Content Include="Presentation.potx" />
+    <Content Include="Spreadsheet.xltx" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
