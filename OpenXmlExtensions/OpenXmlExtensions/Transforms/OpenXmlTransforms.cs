@@ -343,7 +343,23 @@ namespace DocumentFormat.OpenXml.Transforms
                 {
                     throw new ArgumentException("Illegal WordprocessingDocument");
                 }
-                _template = value;
+                if (value.DocumentType == WordprocessingDocumentType.Document ||
+                    value.DocumentType == WordprocessingDocumentType.MacroEnabledDocument)
+                {
+                    // Template is a Word document, so we just take it.
+                    _template = value;
+                }
+                else
+                {
+                    // Template is a Word template rather than a document. Therefore,
+                    // we'll convert it into a document.
+                    _template = (WordprocessingDocument)value.Clone();
+                    if (_template.DocumentType == WordprocessingDocumentType.Template)
+                        _template.ChangeDocumentType(WordprocessingDocumentType.Document);
+                    else
+                        _template.ChangeDocumentType(WordprocessingDocumentType.MacroEnabledDocument);
+                    _template.Save();
+                }
             }
         }
 
@@ -512,6 +528,7 @@ namespace DocumentFormat.OpenXml.Transforms
                 if (styles != null)
                 {
                     part.Styles = styles;
+                    part.Styles.Save();
                 }
                 else
                 {
@@ -529,6 +546,7 @@ namespace DocumentFormat.OpenXml.Transforms
                 {
                     part = packageDocument.MainDocumentPart.AddNewPart<StyleDefinitionsPart>();
                     part.Styles = styles;
+                    part.Styles.Save();
                 }
             }
 
@@ -539,6 +557,7 @@ namespace DocumentFormat.OpenXml.Transforms
                 if (effectsPart == null)
                     effectsPart = packageDocument.MainDocumentPart.AddNewPart<StylesWithEffectsPart>();
                 effectsPart.Styles = (Styles)part.Styles.CloneNode(true);
+                effectsPart.Styles.Save();
             }
             else if (effectsPart != null)
             {
@@ -617,9 +636,14 @@ namespace DocumentFormat.OpenXml.Transforms
             {
                 Numbering numbering = (Numbering)TransformNumbering(part.Numbering, packageDocument);
                 if (numbering != null)
+                {
                     part.Numbering = numbering;
+                    part.Numbering.Save();
+                }
                 else
+                {
                     packageDocument.MainDocumentPart.DeletePart(part);
+                }
             }
             else
             {
@@ -628,6 +652,7 @@ namespace DocumentFormat.OpenXml.Transforms
                 {
                     part = packageDocument.MainDocumentPart.AddNewPart<NumberingDefinitionsPart>();
                     part.Numbering = numbering;
+                    part.Numbering.Save();
                 }
             }
             return packageDocument;
