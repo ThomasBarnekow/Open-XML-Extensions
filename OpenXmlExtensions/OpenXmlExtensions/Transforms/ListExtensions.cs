@@ -54,4 +54,22 @@ namespace DocumentFormat.OpenXml.Transforms
             return list;
         }
     }
+
+    public static class SetExtensions
+    {
+        public static HashSet<T> Append<T>(this HashSet<T> set, object itemOrCollection)
+        {
+            if (itemOrCollection != null)
+            {
+                if (itemOrCollection is T)
+                    set.Add((T)itemOrCollection);
+                else if (itemOrCollection is IEnumerable<T>)
+                    foreach (T item in (IEnumerable<T>)itemOrCollection)
+                        set.Add(item);
+                else
+                    throw new ArgumentException("Illegal item type: " + itemOrCollection.GetType(), "item");
+            }
+            return set;
+        }
+    }
 }

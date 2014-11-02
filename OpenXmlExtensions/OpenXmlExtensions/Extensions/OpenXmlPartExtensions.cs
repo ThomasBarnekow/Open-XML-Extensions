@@ -21,6 +21,7 @@
  * Version: 1.0.01
  */
 
+using System;
 using System.IO;
 using System.Xml;
 using System.Xml.Linq;
@@ -41,6 +42,9 @@ namespace DocumentFormat.OpenXml.Extensions
         /// <returns>The root element</returns>
         public static XElement GetRootElement(this OpenXmlPart part)
         {
+            if (part == null)
+                throw new ArgumentNullException("part");
+
             using (Stream stream = part.GetStream())
             using (StreamReader streamReader = new StreamReader(stream))
             using (XmlReader xmlReader = XmlReader.Create(streamReader))
@@ -54,9 +58,12 @@ namespace DocumentFormat.OpenXml.Extensions
         /// <returns>The namespace</returns>
         public static XNamespace GetRootNamespace(this OpenXmlPart part)
         {
+            if (part == null)
+                throw new ArgumentNullException("part");
+
             XElement root = GetRootElement(part);
             if (root != null)
-                return root.GetDefaultNamespace();
+                return root.Name.Namespace;
             else
                 return null;
         }
@@ -69,6 +76,9 @@ namespace DocumentFormat.OpenXml.Extensions
         /// <param name="root">The new root element</param>
         public static void SetRootElement(this OpenXmlPart part, XElement root)
         {
+            if (part == null)
+                throw new ArgumentNullException("part");
+
             if (root == null)
                 return;
 
