@@ -440,11 +440,13 @@ namespace DocumentFormat.OpenXml.Transforms
             if (part != null)
             {
                 part.Document = (Document)TransformDocument(part.Document, packageDocument);
+                part.Document.Save();
             }
             else
             {
                 part = packageDocument.AddMainDocumentPart();
                 part.Document = CreateDocument(packageDocument);
+                part.Document.Save();
             }
             return packageDocument;
         }
