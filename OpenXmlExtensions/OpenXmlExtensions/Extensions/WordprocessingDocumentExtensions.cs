@@ -53,7 +53,7 @@ namespace DocumentFormat.OpenXml.Extensions
             if (document != null && document.MainDocumentPart != null)
                 return document.MainDocumentPart
                     .GetPartsOfType<CustomXmlPart>()
-                    .SingleOrDefault(p => p.GetRootNamespace() == ns);
+                    .LastOrDefault(p => p.GetRootNamespace() == ns);
             else
                 return null;
         }
@@ -174,8 +174,16 @@ namespace DocumentFormat.OpenXml.Extensions
                 string childElementName = sdt.SdtProperties.GetFirstChild<Tag>().Val.Value;
                 XElement leafElement = destRoot.Descendants().First(e => e.Name.LocalName == childElementName);
 
-                // Build list of namespace names for building the prefix mapping later on.
+                // Define the list of path elements, using one of the following two options:
+                // 1. The following statement is used as the basis for building the full path
+                // expression (the same as built by Microsoft Word).
                 List<XElement> pathElements = leafElement.AncestorsAndSelf().Reverse().ToList();
+
+                // 2. The following statement is used as the basis for building the short xPath
+                // expression "//ns0:leafElement[1]".
+                // List<XElement> pathElements = new List<XElement>() { leafElement };
+
+                // Build list of namespace names for building the prefix mapping later on.
                 List<string> nsList = pathElements
                     .Where(e => e.Name.Namespace != XNamespace.None)
                     .Aggregate(new HashSet<string>(), (set, e) => set.Append(e.Name.NamespaceName))
@@ -191,9 +199,18 @@ namespace DocumentFormat.OpenXml.Extensions
                         sb.Append("xmlns:ns").Append(t.index).Append("='").Append(t.ns).Append("' "))
                     .ToString().Trim();
 
-                // Build xPath, assuming we will always take the first element.
+                // Build xPath, assuming we will always take the first element and using one
+                // of the following two options (see above):
+                // 1. The following statement defines the prefix for building a full path
+                // expression "/ns0:path[1]/ns0:to[1]/ns0:leafElement[1]".
                 Func<string, string> prefix = localName =>
                     nsDict[localName] >= 0 ? "/ns" + nsDict[localName] + ":" : "/";
+
+                // 2. The following statement defines the prefix for building the short path
+                // expression "//ns0:leafElement[1]".
+                // Func<string, string> prefix = localName =>
+                //     nsDict[localName] >= 0 ? "//ns" + nsDict[localName] + ":" : "//";
+
                 string xPath = pathElements
                     .Select(e => prefix(e.Name.LocalName) + e.Name.LocalName + "[1]")
                     .Aggregate(new StringBuilder(), (sb, pc) => sb.Append(pc)).ToString();
