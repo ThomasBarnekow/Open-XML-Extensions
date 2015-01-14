@@ -43,6 +43,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Extensions\CustomXmlPartExtensions.cs" />
     <Compile Include="Extensions\OpenXmlPackageExtensions.cs" />
     <Compile Include="IO\OpenXmlMemoryStream.cs" />
     <Compile Include="IO\PresentationMemoryStream.cs" />

@@ -52,7 +52,7 @@ namespace DocumentFormat.OpenXml.Extensions
         {
             if (document != null && document.MainDocumentPart != null)
                 return document.MainDocumentPart
-                    .GetPartsOfType<CustomXmlPart>()
+                    .CustomXmlParts
                     .LastOrDefault(p => p.GetRootNamespace() == ns);
             else
                 return null;
@@ -62,20 +62,25 @@ namespace DocumentFormat.OpenXml.Extensions
         /// Creates a <see cref="CustomXmlPart"/> with the given root <see cref="XElement"/>.
         /// </summary>
         /// <param name="document">The document.</param>
-        /// <param name="root">The root element.</param>
+        /// <param name="rootElement">The root element.</param>
         /// <returns>The newly created custom XML part.</returns>
-        public static CustomXmlPart CreateCustomXmlPart(this WordprocessingDocument document, XElement root)
+        public static CustomXmlPart CreateCustomXmlPart(this WordprocessingDocument document, XElement rootElement)
         {
+            if (document == null)
+                throw new ArgumentNullException("document");
+            if (rootElement == null)
+                throw new ArgumentNullException("rootElement");
+
             // Create a ds:dataStoreItem associated with the custom XML part's root element.
             DataStoreItem dataStoreItem = new DataStoreItem();
             dataStoreItem.ItemId = "{" + Guid.NewGuid().ToString().ToUpper() + "}";
             dataStoreItem.SchemaReferences = new SchemaReferences();
-            if (root.Name.Namespace != XNamespace.None)
-                dataStoreItem.SchemaReferences.Append(new SchemaReference { Uri = root.Name.NamespaceName });
+            if (rootElement.Name.Namespace != XNamespace.None)
+                dataStoreItem.SchemaReferences.Append(new SchemaReference { Uri = rootElement.Name.NamespaceName });
 
             // Create the custom XML part.
             CustomXmlPart customXmlPart = document.MainDocumentPart.AddCustomXmlPart(CustomXmlPartType.CustomXml);
-            customXmlPart.SetRootElement(root);
+            customXmlPart.SetRootElement(rootElement);
 
             // Create the custom XML properties part.
             CustomXmlPropertiesPart propertiesPart = customXmlPart.AddNewPart<CustomXmlPropertiesPart>();
@@ -90,21 +95,21 @@ namespace DocumentFormat.OpenXml.Extensions
         /// Binds content controls to a custom XML part created or updated from the given XML document.
         /// </summary>
         /// <param name="document">The WordprocessingDocument.</param>
-        /// <param name="partRootElement">The custom XML part's root element.</param>
-        public static void BindContentControls(this WordprocessingDocument document, XElement partRootElement)
+        /// <param name="rootElement">The custom XML part's root element.</param>
+        public static void BindContentControls(this WordprocessingDocument document, XElement rootElement)
         {
             if (document == null)
                 throw new ArgumentNullException("document");
-            if (partRootElement == null)
-                throw new ArgumentNullException("partRootElement");
+            if (rootElement == null)
+                throw new ArgumentNullException("rootElement");
 
             // Get or create custom XML part. This assumes that we only have a single custom
             // XML part for any given namespace.
-            CustomXmlPart destPart = document.GetCustomXmlPart(partRootElement.Name.Namespace);
+            CustomXmlPart destPart = document.GetCustomXmlPart(rootElement.Name.Namespace);
             if (destPart == null)
-                destPart = document.CreateCustomXmlPart(partRootElement);
+                destPart = document.CreateCustomXmlPart(rootElement);
             else
-                destPart.SetRootElement(partRootElement);
+                destPart.SetRootElement(rootElement);
 
             // Bind the content controls to the destination part's XML document.
             document.BindContentControls(destPart);
@@ -114,27 +119,27 @@ namespace DocumentFormat.OpenXml.Extensions
         /// Binds content controls to a custom XML part.
         /// </summary>
         /// <param name="document">The WordprocessingDocument.</param>
-        /// <param name="destPart">The custom XML part.</param>
-        public static void BindContentControls(this WordprocessingDocument document, CustomXmlPart destPart)
+        /// <param name="part">The custom XML part.</param>
+        public static void BindContentControls(this WordprocessingDocument document, CustomXmlPart part)
         {
             if (document == null)
                 throw new ArgumentNullException("document");
-            if (destPart == null)
-                throw new ArgumentNullException("destPart");
+            if (part == null)
+                throw new ArgumentNullException("part");
 
-            XElement destRoot = destPart.GetRootElement();
-            string storeItemId = destPart.CustomXmlPropertiesPart.DataStoreItem.ItemId.Value;
+            XElement customXmlRootElement = part.GetRootElement();
+            string storeItemId = part.CustomXmlPropertiesPart.DataStoreItem.ItemId.Value;
 
             // Bind w:sdt elements contained in main document part.
             OpenXmlPartRootElement partRootElement = document.MainDocumentPart.RootElement;
-            BindContentControls(partRootElement, destRoot, storeItemId);
+            BindContentControls(partRootElement, customXmlRootElement, storeItemId);
             partRootElement.Save();
 
             // Bind w:sdt elements contained in header parts.
             foreach (OpenXmlPartRootElement headerRootElement in document.MainDocumentPart
                 .HeaderParts.Select(p => p.RootElement))
             {
-                BindContentControls(headerRootElement, destRoot, storeItemId);
+                BindContentControls(headerRootElement, customXmlRootElement, storeItemId);
                 headerRootElement.Save();
             }
 
@@ -142,28 +147,33 @@ namespace DocumentFormat.OpenXml.Extensions
             foreach (OpenXmlPartRootElement footerRootElement in document.MainDocumentPart
                 .FooterParts.Select(p => p.RootElement))
             {
-                BindContentControls(footerRootElement, destRoot, storeItemId);
+                BindContentControls(footerRootElement, customXmlRootElement, storeItemId);
                 footerRootElement.Save();
             }
         }
 
         /// <summary>
-        /// Bind the content controls (w:sdt elements) contained in the part's XML document to the
+        /// Bind the content controls (w:sdt elements) contained in the content part's XML document to the
         /// custom XML part identified by the given storeItemId. 
         /// </summary>
-        /// <param name="partRootElement">The Open XML part's root element.</param>
+        /// <param name="contentRootElement">The content part's <see cref="OpenXmlPartRootElement"/>.</param>
+        /// <param name="customXmlRootElement">The custom XML part's root <see cref="XElement"/>.</param>
         /// <param name="storeItemId">The w:storeItemId to be used for data binding.</param>
-        public static void BindContentControls(OpenXmlPartRootElement partRootElement, 
-            XElement destRoot, string storeItemId)
+        public static void BindContentControls(OpenXmlPartRootElement contentRootElement, 
+            XElement customXmlRootElement, string storeItemId)
         {
-            if (partRootElement == null)
-                throw new ArgumentNullException("partRootElement");
+            if (contentRootElement == null)
+                throw new ArgumentNullException("contentRootElement");
+            if (customXmlRootElement == null)
+                throw new ArgumentNullException("customXmlRootElement");
             if (storeItemId == null)
                 throw new ArgumentNullException("storeItemId");
             
             // Get all w:sdt elements with matching tags.
-            IEnumerable<string> tags = destRoot.Descendants().Select(e => e.Name.LocalName);
-            IEnumerable<SdtElement> sdts = partRootElement.Descendants<SdtElement>()
+            IEnumerable<string> tags = customXmlRootElement.Descendants()
+                .Where(e => !e.HasElements)
+                .Select(e => e.Name.LocalName);
+            IEnumerable<SdtElement> sdts = contentRootElement.Descendants<SdtElement>()
                 .Where(sdt => sdt.SdtProperties.GetFirstChild<Tag>() != null &&
                               tags.Contains(sdt.SdtProperties.GetFirstChild<Tag>().Val.Value));
 
@@ -172,7 +182,8 @@ namespace DocumentFormat.OpenXml.Extensions
                 // The tag value is supposed to point to a descendant element of the custom XML
                 // part's root element.
                 string childElementName = sdt.SdtProperties.GetFirstChild<Tag>().Val.Value;
-                XElement leafElement = destRoot.Descendants().First(e => e.Name.LocalName == childElementName);
+                XElement leafElement = customXmlRootElement.Descendants()
+                    .First(e => e.Name.LocalName == childElementName);
 
                 // Define the list of path elements, using one of the following two options:
                 // 1. The following statement is used as the basis for building the full path
@@ -230,7 +241,6 @@ namespace DocumentFormat.OpenXml.Extensions
                     sdt.SdtProperties.Append(dataBinding);
             }
         }
-
 
         /// <summary>
         /// Gets or creates the root element of the document's style definitions part.
