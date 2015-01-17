@@ -593,7 +593,6 @@ namespace DocumentFormat.OpenXml.Transforms
         /// This method is called in case the <see cref="StyleDefinitionsPart"/> does not exist
         /// It can be overridden by subclasses wishing to create a specific <see cref="Styles"/> 
         /// tree. If null is returned, the <see cref="StyleDefinitionsPart"/> will not be created.
-        /// This is the default.
         /// </remarks>
         /// <param name="packageDocument">The <see cref="WordprocessingDocument"/> to be transformed.</param>
         /// <returns>A new instance of <see cref="Styles"/> or null.</returns>
@@ -684,7 +683,6 @@ namespace DocumentFormat.OpenXml.Transforms
         /// This method is called in case the <see cref="NumberingDefinitionsPart"/> does not exist
         /// It can be overridden by subclasses wishing to create a specific <see cref="Numbering"/> 
         /// tree. If null is returned, the <see cref="NumberingDefinitionsPart"/> will not be created.
-        /// This is the default.
         /// </remarks>
         /// <param name="packageDocument">The <see cref="WordprocessingDocument"/> to be transformed.</param>
         /// <returns>A new instance of <see cref="Numbering"/> or null.</returns>
