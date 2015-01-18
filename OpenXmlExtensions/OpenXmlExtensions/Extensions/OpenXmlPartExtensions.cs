@@ -1,7 +1,7 @@
 ﻿/*
  * OpenXmlPartExtensions.cs - Extensions for OpenXmlPart
  * 
- * Copyright 2014 Thomas Barnekow
+ * Copyright 2014-2015 Thomas Barnekow
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,10 @@
  * Version: 1.0.01
  */
 
+using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -37,45 +40,77 @@ namespace DocumentFormat.OpenXml.Extensions
         /// <summary>
         /// Returns the <see cref="OpenXmlPart"/>'s root <see cref="XElement"/>.
         /// </summary>
-        /// <param name="part">The part</param>
-        /// <returns>The root element</returns>
+        /// <param name="part">The part.</param>
+        /// <returns>The root element.</returns>
         public static XElement GetRootElement(this OpenXmlPart part)
         {
-            using (Stream stream = part.GetStream())
-            using (StreamReader streamReader = new StreamReader(stream))
-            using (XmlReader xmlReader = XmlReader.Create(streamReader))
-                return XElement.Load(xmlReader);
-        }
+            if (part == null)
+                throw new ArgumentNullException("part");
 
-        /// <summary>
-        /// Returns the <see cref="OpenXmlPart"/>'s root <see cref="XNamespace"/>.
-        /// </summary>
-        /// <param name="part">The part</param>
-        /// <returns>The namespace</returns>
-        public static XNamespace GetRootNamespace(this OpenXmlPart part)
-        {
-            XElement root = GetRootElement(part);
-            if (root != null)
-                return root.GetDefaultNamespace();
-            else
+            try
+            {
+                using (Stream stream = part.GetStream())
+                using (StreamReader streamReader = new StreamReader(stream))
+                using (XmlReader xmlReader = XmlReader.Create(streamReader))
+                    return XElement.Load(xmlReader);
+            }
+            catch
+            {
                 return null;
+            }
         }
 
         /// <summary>
         /// Sets the <see cref="OpenXmlPart"/>'s root <see cref="XElement"/>, replacing an
-        /// existing one as necessary.
+        /// existing one if it exists.
         /// </summary>
-        /// <param name="part">The part</param>
-        /// <param name="root">The new root element</param>
+        /// <param name="part">The part.</param>
+        /// <param name="root">The new root element.</param>
         public static void SetRootElement(this OpenXmlPart part, XElement root)
         {
+            if (part == null)
+                throw new ArgumentNullException("part");
             if (root == null)
-                return;
+                throw new ArgumentNullException("root");
 
             using (Stream stream = part.GetStream(FileMode.Create))
             using (StreamWriter streamWriter = new StreamWriter(stream))
             using (XmlWriter xmlWriter = XmlWriter.Create(streamWriter))
                 root.WriteTo(xmlWriter);
+        }
+
+        /// <summary>
+        /// Returns the <see cref="OpenXmlPart"/>'s root element <see cref="XName"/>.
+        /// </summary>
+        /// <param name="part">The part.</param>
+        /// <returns>The name.</returns>
+        public static XName GetRootName(this OpenXmlPart part)
+        {
+            if (part == null)
+                throw new ArgumentNullException("part");
+
+            XElement root = part.GetRootElement();
+            if (root != null)
+                return root.Name;
+            else
+                return null;
+        }
+        
+        /// <summary>
+        /// Returns the <see cref="OpenXmlPart"/>'s root element <see cref="XNamespace"/>.
+        /// </summary>
+        /// <param name="part">The part.</param>
+        /// <returns>The namespace.</returns>
+        public static XNamespace GetRootNamespace(this OpenXmlPart part)
+        {
+            if (part == null)
+                throw new ArgumentNullException("part");
+
+            XElement root = part.GetRootElement();
+            if (root != null)
+                return root.Name.Namespace;
+            else
+                return null;
         }
     }
 }

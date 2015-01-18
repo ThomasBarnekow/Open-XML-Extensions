@@ -22,11 +22,16 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Xml.Linq;
 
+using DocumentFormat.OpenXml.CustomXmlDataProperties;
+using DocumentFormat.OpenXml.CustomXmlSchemaReferences;
 using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Transforms;
 using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace DocumentFormat.OpenXml.Extensions
@@ -36,33 +41,6 @@ namespace DocumentFormat.OpenXml.Extensions
     /// </summary>
     public static class WordprocessingDocumentExtensions
     {
-        /// <summary>
-        /// Replaces the document's contents with the contents of the given replacement's contents.
-        /// </summary>
-        /// <param name="document">The destination document</param>
-        /// <param name="replacement">The source document</param>
-        /// <returns>The original document with replaced contents</returns>
-        public static WordprocessingDocument ReplaceWith(this WordprocessingDocument document, 
-            WordprocessingDocument replacement)
-        {
-            if (document == null)
-                throw new ArgumentNullException("document");
-            if (replacement == null)
-                throw new ArgumentNullException("replacement");
-
-            // Delete all parts (i.e., the direct relationship targets and their
-            // children).
-            document.DeleteParts(document.GetPartsOfType<OpenXmlPart>());
-
-            // Add the replacement's parts to the document.
-            foreach (var part in replacement.Parts)
-                document.AddPart(part.OpenXmlPart, part.RelationshipId);
-
-            // Save and return.
-            document.Package.Flush();
-            return document;
-        }
-
         /// <summary>
         /// Returns the <see cref="CustomXmlPart"/> having a root element with the given <see cref="XNamespace"/> 
         /// or null if there is no such <see cref="CustomXmlPart"/>.
@@ -74,8 +52,8 @@ namespace DocumentFormat.OpenXml.Extensions
         {
             if (document != null && document.MainDocumentPart != null)
                 return document.MainDocumentPart
-                    .GetPartsOfType<CustomXmlPart>()
-                    .SingleOrDefault<CustomXmlPart>(p => p.GetRootNamespace() == ns);
+                    .CustomXmlParts
+                    .LastOrDefault(p => p.GetRootNamespace() == ns);
             else
                 return null;
         }
@@ -83,31 +61,185 @@ namespace DocumentFormat.OpenXml.Extensions
         /// <summary>
         /// Creates a <see cref="CustomXmlPart"/> with the given root <see cref="XElement"/>.
         /// </summary>
-        /// <param name="document">The document</param>
-        /// <param name="partRoot">The root element</param>
-        /// <returns>The newly created custom XML part</returns>
-        public static CustomXmlPart CreateCustomXmlPart(this WordprocessingDocument document, XElement partRoot)
+        /// <param name="document">The document.</param>
+        /// <param name="rootElement">The root element.</param>
+        /// <returns>The newly created custom XML part.</returns>
+        public static CustomXmlPart CreateCustomXmlPart(this WordprocessingDocument document, XElement rootElement)
         {
-            if (partRoot == null)
-                return null;
+            if (document == null)
+                throw new ArgumentNullException("document");
+            if (rootElement == null)
+                throw new ArgumentNullException("rootElement");
 
-            // Add custom XML part
-            CustomXmlPart part = document.MainDocumentPart.AddCustomXmlPart(CustomXmlPartType.CustomXml);
-            part.SetRootElement(partRoot);
+            // Create a ds:dataStoreItem associated with the custom XML part's root element.
+            DataStoreItem dataStoreItem = new DataStoreItem();
+            dataStoreItem.ItemId = "{" + Guid.NewGuid().ToString().ToUpper() + "}";
+            dataStoreItem.SchemaReferences = new SchemaReferences();
+            if (rootElement.Name.Namespace != XNamespace.None)
+                dataStoreItem.SchemaReferences.Append(new SchemaReference { Uri = rootElement.Name.NamespaceName });
 
-            // Create contents of XML properties part
-            XNamespace ds = "http://schemas.openxmlformats.org/officeDocument/2006/customXml";
-            XElement propertyPartRoot = new XElement(ds + "datastoreItem",
-                new XAttribute(ds + "itemID", "{" + Guid.NewGuid().ToString().ToUpper() + "}"),
-                new XAttribute(XNamespace.Xmlns + "ds", ds.NamespaceName),
-                new XElement(ds + "schemaRefs"));
+            // Create the custom XML part.
+            CustomXmlPart customXmlPart = document.MainDocumentPart.AddCustomXmlPart(CustomXmlPartType.CustomXml);
+            customXmlPart.SetRootElement(rootElement);
 
-            // Add custom XML properties part
-            CustomXmlPropertiesPart propertyPart = part.AddNewPart<CustomXmlPropertiesPart>();
-            propertyPart.SetRootElement(propertyPartRoot);
+            // Create the custom XML properties part.
+            CustomXmlPropertiesPart propertiesPart = customXmlPart.AddNewPart<CustomXmlPropertiesPart>();
+            propertiesPart.DataStoreItem = dataStoreItem;
+            propertiesPart.DataStoreItem.Save();
 
-            // Done
-            return part;
+            document.Package.Flush();
+            return customXmlPart;
+        }
+
+        /// <summary>
+        /// Binds content controls to a custom XML part created or updated from the given XML document.
+        /// </summary>
+        /// <param name="document">The WordprocessingDocument.</param>
+        /// <param name="rootElement">The custom XML part's root element.</param>
+        public static void BindContentControls(this WordprocessingDocument document, XElement rootElement)
+        {
+            if (document == null)
+                throw new ArgumentNullException("document");
+            if (rootElement == null)
+                throw new ArgumentNullException("rootElement");
+
+            // Get or create custom XML part. This assumes that we only have a single custom
+            // XML part for any given namespace.
+            CustomXmlPart destPart = document.GetCustomXmlPart(rootElement.Name.Namespace);
+            if (destPart == null)
+                destPart = document.CreateCustomXmlPart(rootElement);
+            else
+                destPart.SetRootElement(rootElement);
+
+            // Bind the content controls to the destination part's XML document.
+            document.BindContentControls(destPart);
+        }
+
+        /// <summary>
+        /// Binds content controls to a custom XML part.
+        /// </summary>
+        /// <param name="document">The WordprocessingDocument.</param>
+        /// <param name="part">The custom XML part.</param>
+        public static void BindContentControls(this WordprocessingDocument document, CustomXmlPart part)
+        {
+            if (document == null)
+                throw new ArgumentNullException("document");
+            if (part == null)
+                throw new ArgumentNullException("part");
+
+            XElement customXmlRootElement = part.GetRootElement();
+            string storeItemId = part.CustomXmlPropertiesPart.DataStoreItem.ItemId.Value;
+
+            // Bind w:sdt elements contained in main document part.
+            OpenXmlPartRootElement partRootElement = document.MainDocumentPart.RootElement;
+            BindContentControls(partRootElement, customXmlRootElement, storeItemId);
+            partRootElement.Save();
+
+            // Bind w:sdt elements contained in header parts.
+            foreach (OpenXmlPartRootElement headerRootElement in document.MainDocumentPart
+                .HeaderParts.Select(p => p.RootElement))
+            {
+                BindContentControls(headerRootElement, customXmlRootElement, storeItemId);
+                headerRootElement.Save();
+            }
+
+            // Bind w:sdt elements contained in footer parts.
+            foreach (OpenXmlPartRootElement footerRootElement in document.MainDocumentPart
+                .FooterParts.Select(p => p.RootElement))
+            {
+                BindContentControls(footerRootElement, customXmlRootElement, storeItemId);
+                footerRootElement.Save();
+            }
+        }
+
+        /// <summary>
+        /// Bind the content controls (w:sdt elements) contained in the content part's XML document to the
+        /// custom XML part identified by the given storeItemId. 
+        /// </summary>
+        /// <param name="contentRootElement">The content part's <see cref="OpenXmlPartRootElement"/>.</param>
+        /// <param name="customXmlRootElement">The custom XML part's root <see cref="XElement"/>.</param>
+        /// <param name="storeItemId">The w:storeItemId to be used for data binding.</param>
+        public static void BindContentControls(OpenXmlPartRootElement contentRootElement, 
+            XElement customXmlRootElement, string storeItemId)
+        {
+            if (contentRootElement == null)
+                throw new ArgumentNullException("contentRootElement");
+            if (customXmlRootElement == null)
+                throw new ArgumentNullException("customXmlRootElement");
+            if (storeItemId == null)
+                throw new ArgumentNullException("storeItemId");
+            
+            // Get all w:sdt elements with matching tags.
+            IEnumerable<string> tags = customXmlRootElement.Descendants()
+                .Where(e => !e.HasElements)
+                .Select(e => e.Name.LocalName);
+            IEnumerable<SdtElement> sdts = contentRootElement.Descendants<SdtElement>()
+                .Where(sdt => sdt.SdtProperties.GetFirstChild<Tag>() != null &&
+                              tags.Contains(sdt.SdtProperties.GetFirstChild<Tag>().Val.Value));
+
+            foreach (SdtElement sdt in sdts)
+            {
+                // The tag value is supposed to point to a descendant element of the custom XML
+                // part's root element.
+                string childElementName = sdt.SdtProperties.GetFirstChild<Tag>().Val.Value;
+                XElement leafElement = customXmlRootElement.Descendants()
+                    .First(e => e.Name.LocalName == childElementName);
+
+                // Define the list of path elements, using one of the following two options:
+                // 1. The following statement is used as the basis for building the full path
+                // expression (the same as built by Microsoft Word).
+                List<XElement> pathElements = leafElement.AncestorsAndSelf().Reverse().ToList();
+
+                // 2. The following statement is used as the basis for building the short xPath
+                // expression "//ns0:leafElement[1]".
+                // List<XElement> pathElements = new List<XElement>() { leafElement };
+
+                // Build list of namespace names for building the prefix mapping later on.
+                List<string> nsList = pathElements
+                    .Where(e => e.Name.Namespace != XNamespace.None)
+                    .Aggregate(new HashSet<string>(), (set, e) => set.Append(e.Name.NamespaceName))
+                    .ToList();
+
+                // Build mapping from local names to namespace indices.
+                Dictionary<string, int> nsDict = pathElements
+                    .ToDictionary(e => e.Name.LocalName, e => nsList.IndexOf(e.Name.NamespaceName));
+
+                // Build prefix mappings.
+                string prefixMappings = nsList.Select((ns, index) => new { ns, index })
+                    .Aggregate(new StringBuilder(), (sb, t) =>
+                        sb.Append("xmlns:ns").Append(t.index).Append("='").Append(t.ns).Append("' "))
+                    .ToString().Trim();
+
+                // Build xPath, assuming we will always take the first element and using one
+                // of the following two options (see above):
+                // 1. The following statement defines the prefix for building a full path
+                // expression "/ns0:path[1]/ns0:to[1]/ns0:leafElement[1]".
+                Func<string, string> prefix = localName =>
+                    nsDict[localName] >= 0 ? "/ns" + nsDict[localName] + ":" : "/";
+
+                // 2. The following statement defines the prefix for building the short path
+                // expression "//ns0:leafElement[1]".
+                // Func<string, string> prefix = localName =>
+                //     nsDict[localName] >= 0 ? "//ns" + nsDict[localName] + ":" : "//";
+
+                string xPath = pathElements
+                    .Select(e => prefix(e.Name.LocalName) + e.Name.LocalName + "[1]")
+                    .Aggregate(new StringBuilder(), (sb, pc) => sb.Append(pc)).ToString();
+
+                // Create and configure new data binding.
+                DataBinding dataBinding = new DataBinding();
+                if (!String.IsNullOrEmpty(prefixMappings))
+                    dataBinding.PrefixMappings = prefixMappings;
+                dataBinding.XPath = xPath;
+                dataBinding.StoreItemId = storeItemId;
+
+                // Add or replace data binding.
+                DataBinding currentDataBinding = sdt.SdtProperties.GetFirstChild<DataBinding>();
+                if (currentDataBinding != null)
+                    sdt.SdtProperties.ReplaceChild(dataBinding, currentDataBinding);
+                else
+                    sdt.SdtProperties.Append(dataBinding);
+            }
         }
 
         /// <summary>
@@ -117,6 +249,9 @@ namespace DocumentFormat.OpenXml.Extensions
         /// <returns>The root element of the document's style definitions part</returns>
         public static Styles ProduceStylesElement(this WordprocessingDocument document)
         {
+            if (document == null)
+                throw new ArgumentNullException("document");
+
             // Access the styles part.
             StyleDefinitionsPart part = document.MainDocumentPart.StyleDefinitionsPart;
             if (part == null)
@@ -142,6 +277,9 @@ namespace DocumentFormat.OpenXml.Extensions
         /// <returns>The root element of the document's numbering definitions part</returns>
         public static Numbering ProduceNumberingElement(this WordprocessingDocument document)
         {
+            if (document == null)
+                throw new ArgumentNullException("document");
+
             // Access the numbering part.
             NumberingDefinitionsPart part = document.MainDocumentPart.NumberingDefinitionsPart;
             if (part == null)
@@ -169,6 +307,11 @@ namespace DocumentFormat.OpenXml.Extensions
         public static Style GetParagraphStyle(this WordprocessingDocument document, 
             string styleId)
         {
+            if (document == null)
+                throw new ArgumentNullException("document");
+            if (styleId == null)
+                throw new ArgumentNullException("styleId");
+
             Styles styles = document.ProduceStylesElement();
             return styles.Elements<Style>().FirstOrDefault<Style>(
                 style => style.StyleId == styleId &&
@@ -184,6 +327,11 @@ namespace DocumentFormat.OpenXml.Extensions
         public static Style GetCharacterStyle(this WordprocessingDocument document, 
             string styleId)
         {
+            if (document == null)
+                throw new ArgumentNullException("document");
+            if (styleId == null)
+                throw new ArgumentNullException("styleId");
+
             Styles styles = document.ProduceStylesElement();
             return styles.Elements<Style>().FirstOrDefault<Style>(
                 style => style.StyleId == styleId &&
@@ -277,6 +425,9 @@ namespace DocumentFormat.OpenXml.Extensions
         /// <returns>The <see cref="ParagraphPropertiesBaseStyle"/></returns>
         public static ParagraphPropertiesBaseStyle GetParagraphPropertiesBaseStyle(this WordprocessingDocument document)
         {
+            if (document == null) 
+                throw new ArgumentNullException("document");
+            
             DocDefaults docDefaults = document.ProduceStylesElement().DocDefaults;
             return docDefaults.ParagraphPropertiesDefault.ParagraphPropertiesBaseStyle;
         }
@@ -288,6 +439,9 @@ namespace DocumentFormat.OpenXml.Extensions
         /// <returns></returns>
         public static int GetDefaultSpaceBefore(this WordprocessingDocument document)
         {
+            if (document == null) 
+                throw new ArgumentNullException("document");
+            
             ParagraphPropertiesBaseStyle pPr = document.GetParagraphPropertiesBaseStyle();
             if (pPr.SpacingBetweenLines == null)
                 return 0;
@@ -304,6 +458,9 @@ namespace DocumentFormat.OpenXml.Extensions
         /// <returns></returns>
         public static int GetDefaultSpaceAfter(this WordprocessingDocument document)
         {
+            if (document == null) 
+                throw new ArgumentNullException("document");
+
             ParagraphPropertiesBaseStyle pPr = document.GetParagraphPropertiesBaseStyle();
             if (pPr.SpacingBetweenLines == null)
                 return 0;
@@ -320,6 +477,9 @@ namespace DocumentFormat.OpenXml.Extensions
         /// <returns>The <see cref="RunPropertiesBaseStyle"/></returns>
         public static RunPropertiesBaseStyle GetRunPropertiesBaseStyle(this WordprocessingDocument document)
         {
+            if (document == null) 
+                throw new ArgumentNullException("document");
+            
             DocDefaults docDefaults = document.ProduceStylesElement().DocDefaults;
             return docDefaults.RunPropertiesDefault.RunPropertiesBaseStyle;
         }
@@ -331,6 +491,9 @@ namespace DocumentFormat.OpenXml.Extensions
         /// <returns></returns>
         public static int GetDefaultFontSize(this WordprocessingDocument document)
         {
+            if (document == null) 
+                throw new ArgumentNullException("document");
+
             RunPropertiesBaseStyle rPr = document.GetRunPropertiesBaseStyle();
             if (rPr.FontSize != null)
                 return int.Parse(rPr.FontSize.Val);

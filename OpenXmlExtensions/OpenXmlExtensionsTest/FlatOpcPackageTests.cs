@@ -1,5 +1,5 @@
 ﻿/*
- * Program.cs - Test driver for FlatOpcPackage
+ * FlatOpcPackageTests.cs - Test driver for FlatOpcPackage
  * 
  * Copyright 2014 Thomas Barnekow
  *
@@ -76,6 +76,54 @@ namespace OpenXmlExtensionsTest
             TestTools.PrepareWordprocessingDocument(documentPath);
             TestTools.PrepareSpreadsheetDocument(spreadsheetPath);
             TestTools.PreparePresentationDocument(presentationPath);
+        }
+
+        private void PrintParts(Package package)
+        {
+            Console.WriteLine("\n" + package.GetType());
+            foreach (var packageRel in package.GetRelationships().Where(r => r.TargetMode == TargetMode.Internal))
+            {
+                Uri partUri = PackUriHelper.CreatePartUri(packageRel.TargetUri);
+                PrintPart(package.GetPart(partUri), 2);
+            }
+        }
+
+        private void PrintPart(PackagePart part, int indent)
+        {
+            Console.WriteLine(new string(' ', indent) + part.Uri + ": " + part.ContentType);
+            if (part.ContentType != "application/vnd.openxmlformats-package.relationships+xml")
+            {
+                foreach (var rel in part.GetRelationships())
+                {
+                    if (rel.TargetMode == TargetMode.Internal)
+                    {
+                        Uri targetPartUri = PackUriHelper.ResolvePartUri(part.Uri, rel.TargetUri);
+                        PrintPart(rel.Package.GetPart(targetPartUri), indent + 2);
+                    }
+                    else
+                    {
+                        Console.WriteLine(new string(' ', indent + 2) + rel.TargetUri + " (" + rel.RelationshipType + ")");
+                    }
+                }
+            }
+        }
+
+        [Test]
+        public void ShowParts()
+        {
+            // This is not really an NUnit test because it doesn't assert anything.
+            // However, it shows the package contents using relationships. This way,
+            // we can see that the FlatOpcPackage has all the relationships although
+            // we did not pay specific attention to them.
+            using (WordprocessingDocument doc = WordprocessingDocument.Open(documentPath, false))
+            {
+                PrintParts(doc.Package);
+            }
+
+            using (FlatOpcPackage package = FlatOpcPackage.Open(xmlDocumentPath))
+            {
+                PrintParts(package);
+            }
         }
 
         [Test]

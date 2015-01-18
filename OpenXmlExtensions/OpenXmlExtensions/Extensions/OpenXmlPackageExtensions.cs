@@ -21,6 +21,7 @@
  * Version: 1.0.01
  */
 
+using System;
 using System.Collections.Generic;
 using DocumentFormat.OpenXml.Packaging;
 
@@ -32,9 +33,36 @@ namespace DocumentFormat.OpenXml.Extensions
     public static class OpenXmlPackageExtensions
     {
         /// <summary>
+        /// Replaces the document's contents with the contents of the given replacement's contents.
+        /// </summary>
+        /// <param name="document">The destination document</param>
+        /// <param name="replacement">The source document</param>
+        /// <returns>The original document with replaced contents</returns>
+        public static OpenXmlPackage ReplaceWith(this OpenXmlPackage document,
+            OpenXmlPackage replacement)
+        {
+            if (document == null)
+                throw new ArgumentNullException("document");
+            if (replacement == null)
+                throw new ArgumentNullException("replacement");
+
+            // Delete all parts (i.e., the direct relationship targets and their
+            // children).
+            document.DeleteParts(document.GetPartsOfType<OpenXmlPart>());
+
+            // Add the replacement's parts to the document.
+            foreach (var part in replacement.Parts)
+                document.AddPart(part.OpenXmlPart, part.RelationshipId);
+
+            // Save and return.
+            document.Package.Flush();
+            return document;
+        }
+
+        /// <summary>
         /// Gets all parts contained in the <see cref="OpenXmlPackage"/> in a 
         /// breadth-first fashion, i.e., the direct and indirect relationship
-        /// targets of the package (where the <see cref="OpenXmlPackage.Parts"/>
+        /// targets of the package (where the <see cref="OpenXmlPartContainer.Parts"/>
         /// property only returns the direct relationship targets).
         /// </summary>
         public static IEnumerable<OpenXmlPart> GetAllParts(this OpenXmlPackage package)

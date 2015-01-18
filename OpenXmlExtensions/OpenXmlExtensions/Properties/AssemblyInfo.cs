@@ -1,7 +1,7 @@
 ﻿/*
  * AssemblyInfo.cs - Assembly Info
  * 
- * Copyright 2014 Thomas Barnekow
+ * Copyright 2014-2015 Thomas Barnekow
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,24 +18,28 @@
  * Developer: Thomas Barnekow
  * Email: thomas<at/>barnekow<dot/>info
  * 
- * Version: 1.0.01
+ * Version: 1.0.14
  */
 
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-// General Information about an assembly is controlled through the following 
-// set of attributes. Change these attribute values to modify the information
-// associated with an assembly.
+// General Information about the assembly.
 [assembly: AssemblyTitle("OpenXmlExtensions")]
-[assembly: AssemblyDescription("")]
-[assembly: AssemblyConfiguration("")]
+[assembly: AssemblyDescription("Open XML Extensions")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("OpenXmlExtensions")]
-[assembly: AssemblyCopyright("Copyright 2014 Thomas Barnekow")]
+[assembly: AssemblyProduct("Open XML Extensions")]
+[assembly: AssemblyCopyright("Copyright 2014-2015 Thomas Barnekow. Licensed under the Apache License, Version 2.0.")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
+
+// Derive configuration from active project configuration.
+#if DEBUG
+[assembly: AssemblyConfiguration("Debug")]
+#else
+[assembly: AssemblyConfiguration("Release")]
+#endif
 
 // Setting ComVisible to false makes the types in this assembly not visible 
 // to COM components.  If you need to access a type in this assembly from 
@@ -52,8 +56,5 @@ using System.Runtime.InteropServices;
 //      Build Number
 //      Revision
 //
-// You can specify all the values or you can default the Build and Revision Numbers 
-// by using the '*' as shown below:
-// [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.0.1.0")]
-[assembly: AssemblyFileVersion("1.0.1.0")]
+[assembly: AssemblyVersion("1.1.*")]
+// [assembly: AssemblyFileVersion("1.0.14.*")]

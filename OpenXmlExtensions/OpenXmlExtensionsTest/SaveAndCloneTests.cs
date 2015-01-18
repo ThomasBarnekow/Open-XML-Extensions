@@ -94,6 +94,36 @@ namespace OpenXmlExtensionsTest
         }
 
         [Test]
+        public void TestDefaultClone()
+        {
+            using (WordprocessingDocument source = WordprocessingDocument.Open(documentPath, false))
+            using (WordprocessingDocument clone = (WordprocessingDocument)source.Clone())
+            {
+                Body body = clone.MainDocumentPart.Document.Body;
+                body.InsertBefore(new Paragraph(new Run(new Text("Hello World"))), body.FirstChild);
+                clone.SaveAs("SaveAndClone\\Default " + documentPath).Close();
+            }
+
+            try
+            {
+                CheckWordprocessingDocument(documentPath, "SaveAndClone\\Default " + documentPath);
+            }
+            catch (AssertionException)
+            {
+                // We want the documents to be different.
+                return;
+            }
+            catch (Exception)
+            {
+                // This is unexpected.
+                throw;
+            }
+
+            // If the documents are the same, the clone was not writeable, which is an error.
+            Assert.Fail();
+        }
+
+        [Test]
         public void TestStreamBasedClone()
         {
             // Test WordprocessingDocument.

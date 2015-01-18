@@ -121,7 +121,7 @@ namespace DocumentFormat.OpenXml.Extensions
                 throw new ArgumentNullException("document");
 
             Style style = document.GetParagraphStyle(paragraph.GetParagraphStyleId());
-            if (style.StyleParagraphProperties != null && style.StyleParagraphProperties.OutlineLevel != null)
+            if (style != null && style.StyleParagraphProperties != null && style.StyleParagraphProperties.OutlineLevel != null)
                 return style.StyleParagraphProperties.OutlineLevel.Val + 1;
             else
                 return 10;
