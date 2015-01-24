@@ -49,7 +49,7 @@ namespace DocumentFormat.OpenXml.Transforms
                 else if (itemOrCollection is IEnumerable<T>)
                     list.AddRange((IEnumerable<T>)itemOrCollection);
                 else
-                    throw new ArgumentException("Illegal item type: " + itemOrCollection.GetType(), "item");
+                    throw new ArgumentException("Illegal item type: " + itemOrCollection.GetType(), "itemOrCollection");
             }
             return list;
         }
@@ -67,7 +67,7 @@ namespace DocumentFormat.OpenXml.Transforms
                     foreach (T item in (IEnumerable<T>)itemOrCollection)
                         set.Add(item);
                 else
-                    throw new ArgumentException("Illegal item type: " + itemOrCollection.GetType(), "item");
+                    throw new ArgumentException("Illegal item type: " + itemOrCollection.GetType(), "itemOrCollection");
             }
             return set;
         }
