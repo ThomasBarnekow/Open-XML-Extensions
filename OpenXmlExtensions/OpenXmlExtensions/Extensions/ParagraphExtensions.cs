@@ -22,6 +22,7 @@
  */
 
 using System;
+using System.Linq;
 
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
@@ -193,19 +194,16 @@ namespace DocumentFormat.OpenXml.Extensions
                 throw new ArgumentNullException("document");
 
             // See whether the paragraph style has it.
-            Style pStyle = paragraph.GetParagraphStyle(document);
-            if (pStyle.StyleRunProperties != null)
-            {
-                T leaf = pStyle.StyleRunProperties.GetFirstChild<T>();
-                if (leaf != null)
-                    return leaf;
-            }
+            Style style = paragraph.GetParagraphStyle(document);
+            T leaf = style.GetParagraphPropertiesLeafElement<T>(document);
+            if (leaf != null)
+                return leaf;
 
             // See whether a potential character style has it.
             Style rStyle = paragraph.GetCharacterStyle(document);
             if (rStyle != null && rStyle.StyleRunProperties != null)
             {
-                T leaf = rStyle.StyleRunProperties.GetFirstChild<T>();
+                leaf = rStyle.StyleRunProperties.GetFirstChild<T>();
                 if (leaf != null)
                     return leaf;
             }
@@ -218,6 +216,25 @@ namespace DocumentFormat.OpenXml.Extensions
             }
 
             // There is no such leaf.
+            return null;
+        }
+
+        public static T GetParagraphPropertiesLeafElement<T>(this Style style, WordprocessingDocument document) where T : OpenXmlLeafElement
+        {
+            if (style.StyleRunProperties != null)
+            {
+                T leaf = style.StyleRunProperties.GetFirstChild<T>();
+                if (leaf != null)
+                    return leaf;
+            }
+            if (style.BasedOn != null)
+            {
+                Styles styles = document.ProduceStylesElement();
+                Style baseStyle = styles.Elements<Style>()
+                    .FirstOrDefault(e => e.StyleId.Value == style.BasedOn.Val.Value);
+                if (baseStyle != null)
+                    return baseStyle.GetParagraphPropertiesLeafElement<T>(document);
+            }
             return null;
         }
     }
