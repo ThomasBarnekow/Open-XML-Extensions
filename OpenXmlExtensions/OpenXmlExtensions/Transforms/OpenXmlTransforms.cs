@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 using DocumentFormat.OpenXml.Extensions;
@@ -68,7 +69,7 @@ namespace DocumentFormat.OpenXml.Transforms
     /// This class is the abstract base class of all Open XML transforms.
     /// </summary>
     /// <typeparam name="DocumentType">A subclass of <see cref="OpenXmlPackage"/>.</typeparam>
-    public abstract class OpenXmlTransform<DocumentType> 
+    public abstract class OpenXmlTransform<DocumentType> : ICloneable
         where DocumentType : OpenXmlPackage
     {
         /// <summary>
@@ -123,6 +124,15 @@ namespace DocumentFormat.OpenXml.Transforms
         public virtual DocumentType TransformInPlace(DocumentType packageDocument)
         {
             return packageDocument;
+        }
+
+        /// <summary>
+        /// Creates a deep copy of the transform.
+        /// </summary>
+        /// <returns></returns>
+        public virtual object Clone()
+        {
+            return MemberwiseClone();
         }
     }
 
@@ -321,8 +331,6 @@ namespace DocumentFormat.OpenXml.Transforms
 
         #region Properties
 
-        private WordprocessingDocument _template = null;
-
         /// <summary>
         /// Gets or sets the template <see cref="WordprocessingDocument"/>.
         /// </summary>
@@ -334,7 +342,13 @@ namespace DocumentFormat.OpenXml.Transforms
             }
 
             set
-            { 
+            {
+                if (value == null)
+                {
+                    _template = null;
+                    return;
+                }
+
                 // Check template's validity. A "minimum document" must have at least
                 // a MainDocumentPart with a w:document element that has a w:body child.
                 if (value.MainDocumentPart == null || 
@@ -362,6 +376,7 @@ namespace DocumentFormat.OpenXml.Transforms
                 }
             }
         }
+        private WordprocessingDocument _template = null;
 
         /// <summary>
         /// Gets the template's w:body element. Returns null if no template was specified.
@@ -692,5 +707,78 @@ namespace DocumentFormat.OpenXml.Transforms
         }
 
         #endregion Numbering
+
+        #region Headers
+
+        protected WordprocessingDocument TransformHeaders(WordprocessingDocument packageDocument)
+        {
+            List<HeaderPart> parts = packageDocument.MainDocumentPart.HeaderParts.ToList();
+            foreach (HeaderPart part in parts)
+            {
+                Header header = (Header)TransformHeader(part.Header, packageDocument);
+                if (header != null)
+                {
+                    part.Header = header;
+                    part.Header.Save();
+                }
+                else
+                {
+                    packageDocument.MainDocumentPart.DeletePart(part);
+                }
+            }
+            return packageDocument;
+        }
+
+        protected virtual object TransformHeader(OpenXmlElement element, WordprocessingDocument packageDocument)
+        {
+            return element.CloneNode(true);
+        }
+
+        #endregion
+
+        #region Footers
+
+        protected WordprocessingDocument TransformFooters(WordprocessingDocument packageDocument)
+        {
+            List<FooterPart> parts = packageDocument.MainDocumentPart.FooterParts.ToList();
+            foreach (FooterPart part in parts)
+            {
+                Footer footer = (Footer)TransformFooter(part.Footer, packageDocument);
+                if (footer != null)
+                {
+                    part.Footer = footer;
+                    part.Footer.Save();
+                }
+                else
+                {
+                    packageDocument.MainDocumentPart.DeletePart(part);
+                }
+            }
+            return packageDocument;
+        }
+
+        protected virtual object TransformFooter(OpenXmlElement element, WordprocessingDocument packageDocument)
+        {
+            return element.CloneNode(true);
+        }
+
+        #endregion
+
+        #region ICloneable Methods
+
+        /// <summary>
+        /// Creates a deep copy of the transform.
+        /// </summary>
+        /// <returns>The clone.</returns>
+        public override object Clone()
+        {
+            WordprocessingDocumentTransform transform = (WordprocessingDocumentTransform)base.Clone();
+            if (Template != null)
+                transform.Template = (WordprocessingDocument)Template.Clone();
+            
+            return transform;
+        }
+
+        #endregion
     }
 }
