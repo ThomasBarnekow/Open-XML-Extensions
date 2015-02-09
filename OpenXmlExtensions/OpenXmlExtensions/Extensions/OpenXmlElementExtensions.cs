@@ -77,12 +77,12 @@ namespace DocumentFormat.OpenXml.Extensions
         /// <param name="element">The element to be transformed.</param>
         /// <param name="transform">The transform to be applied to the element's descendants.</param>
         /// <returns>The transformed element.</returns>
-        /// <seealso cref="TransformElementsSelecting"/>
+        /// <seealso cref="SelectResultsOf"/>
         public static T TransformSelecting<T>(this T element, Func<OpenXmlElement, object> transform)
             where T : OpenXmlElement
         {
             T transformedElement = (T)element.CloneNode(false);
-            transformedElement.Append(element.TransformElementsSelecting(e => transform(e)));
+            transformedElement.Append(element.Elements().SelectResultsOf(e => transform(e)));
             return transformedElement;
         }
 
@@ -98,14 +98,14 @@ namespace DocumentFormat.OpenXml.Extensions
         /// or null are returned by the transform, <see cref="TransformAggregating"/> should
         /// be used instead of this method.
         /// </remarks>
-        /// <param name="element">The root element.</param>
+        /// <param name="elements">The collection of elements to be transformed.</param>
         /// <param name="transform">The transform to be applied.</param>
         /// <returns>The collection of transformed elements.</returns>
         /// <seealso cref="TransformSelecting"/>
-        public static IEnumerable<OpenXmlElement> TransformElementsSelecting(this OpenXmlElement element,
-            Func<OpenXmlElement, object> transform)
+        public static IEnumerable<T> SelectResultsOf<T>(this IEnumerable<T> elements, Func<T, object> transform)
+            where T : OpenXmlElement
         {
-            return element.Elements().Select(e => (OpenXmlElement)transform(e));
+            return elements.Select(e => (T)transform(e));
         }
 
         /// <summary>
@@ -116,12 +116,12 @@ namespace DocumentFormat.OpenXml.Extensions
         /// <param name="element">The element to be transformed.</param>
         /// <param name="transform">The transform to be applied to the element's descendants.</param>
         /// <returns>The transformed element.</returns>
-        /// <seealso cref="TransformElementsAggregating"/>
+        /// <seealso cref="AggregateResultsOf"/>
         public static T TransformAggregating<T>(this T element, Func<OpenXmlElement, object> transform)
             where T : OpenXmlElement
         {
             T transformedElement = (T)element.CloneNode(false);
-            transformedElement.Append(element.TransformElementsAggregating(e => transform(e)));
+            transformedElement.Append(element.Elements().AggregateResultsOf(e => transform(e)));
             return transformedElement;
         }
 
@@ -137,15 +137,14 @@ namespace DocumentFormat.OpenXml.Extensions
         /// single <see cref="OpenXmlElement"/> instances or null, that overhead can be avoided
         /// by using the <see cref="TransformSelecting"/> extension method.
         /// </remarks>
-        /// <param name="element">The root element.</param>
+        /// <param name="elements">The collection of elements to be transformed.</param>
         /// <param name="transform">The transform to be applied.</param>
         /// <returns>The collection of transformed elements.</returns>
         /// <seealso cref="TransformAggregating"/>
-        public static IEnumerable<OpenXmlElement> TransformElementsAggregating(this OpenXmlElement element,
-            Func<OpenXmlElement, object> transform)
+        public static IEnumerable<T> AggregateResultsOf<T>(this IEnumerable<T> elements, Func<T, object> transform)
+            where T : OpenXmlElement
         {
-            return element.Elements()
-                .Aggregate(new List<OpenXmlElement>(), (list, e) => list.Append(transform(e)));
+            return elements.Aggregate(new List<T>(), (list, e) => list.Append(transform(e)));
         }
     }
 }
