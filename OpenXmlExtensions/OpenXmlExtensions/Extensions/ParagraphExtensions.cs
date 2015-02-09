@@ -221,6 +221,11 @@ namespace DocumentFormat.OpenXml.Extensions
 
         public static T GetParagraphPropertiesLeafElement<T>(this Style style, WordprocessingDocument document) where T : OpenXmlLeafElement
         {
+            if (style == null)
+                throw new ArgumentNullException("style");
+            if (document == null)
+                throw new ArgumentNullException("document");
+
             if (style.StyleRunProperties != null)
             {
                 T leaf = style.StyleRunProperties.GetFirstChild<T>();
