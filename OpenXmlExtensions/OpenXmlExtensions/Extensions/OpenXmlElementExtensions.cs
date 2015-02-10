@@ -1,7 +1,7 @@
 ﻿/*
  * OpenXmlElementExtensions.cs - Extensions for OpenXmlElement
  *
- * Copyright 2014 Thomas Barnekow
+ * Copyright 2014-2015 Thomas Barnekow
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -77,6 +77,7 @@ namespace DocumentFormat.OpenXml.Extensions
         /// <param name="element">The element to be transformed.</param>
         /// <param name="transform">The transform to be applied to the element's descendants.</param>
         /// <returns>The transformed element.</returns>
+        /// <seealso cref="TransformAggregating"/>
         /// <seealso cref="SelectResultsOf"/>
         public static T TransformSelecting<T>(this T element, Func<OpenXmlElement, object> transform)
             where T : OpenXmlElement
@@ -95,17 +96,17 @@ namespace DocumentFormat.OpenXml.Extensions
         /// element. With the current Open XML SDK, this does not work in case the result of
         /// a single transform is a collection of <see cref="OpenXmlElement"/> instances.
         /// If it is not guaranteed that only single <see cref="OpenXmlElement"/> instances
-        /// or null are returned by the transform, <see cref="TransformAggregating"/> should
+        /// or null are returned by the transform, <see cref="AggregateResultsOf"/> should
         /// be used instead of this method.
         /// </remarks>
         /// <param name="elements">The collection of elements to be transformed.</param>
         /// <param name="transform">The transform to be applied.</param>
         /// <returns>The collection of transformed elements.</returns>
-        /// <seealso cref="TransformSelecting"/>
-        public static IEnumerable<T> SelectResultsOf<T>(this IEnumerable<T> elements, Func<T, object> transform)
-            where T : OpenXmlElement
+        /// <seealso cref="AggregateResultsOf"/>
+        public static IEnumerable<OpenXmlElement> SelectResultsOf(this IEnumerable<OpenXmlElement> elements,
+            Func<OpenXmlElement, object> transform)
         {
-            return elements.Select(e => (T)transform(e));
+            return elements.Select(e => (OpenXmlElement)transform(e));
         }
 
         /// <summary>
@@ -116,6 +117,7 @@ namespace DocumentFormat.OpenXml.Extensions
         /// <param name="element">The element to be transformed.</param>
         /// <param name="transform">The transform to be applied to the element's descendants.</param>
         /// <returns>The transformed element.</returns>
+        /// <seealso cref="TransformSelecting"/>
         /// <seealso cref="AggregateResultsOf"/>
         public static T TransformAggregating<T>(this T element, Func<OpenXmlElement, object> transform)
             where T : OpenXmlElement
@@ -135,16 +137,16 @@ namespace DocumentFormat.OpenXml.Extensions
         /// For each descendant, this incurs the overhead of creating a new
         /// <see cref="List{OpenXmlElement}"/>. If it is guaranteed that transforms only return
         /// single <see cref="OpenXmlElement"/> instances or null, that overhead can be avoided
-        /// by using the <see cref="TransformSelecting"/> extension method.
+        /// by using the <see cref="SelectResultsOf"/> extension method.
         /// </remarks>
         /// <param name="elements">The collection of elements to be transformed.</param>
         /// <param name="transform">The transform to be applied.</param>
         /// <returns>The collection of transformed elements.</returns>
-        /// <seealso cref="TransformAggregating"/>
-        public static IEnumerable<T> AggregateResultsOf<T>(this IEnumerable<T> elements, Func<T, object> transform)
-            where T : OpenXmlElement
+        /// <seealso cref="SelectResultsOf"/>
+        public static IEnumerable<OpenXmlElement> AggregateResultsOf(this IEnumerable<OpenXmlElement> elements,
+            Func<OpenXmlElement, object> transform)
         {
-            return elements.Aggregate(new List<T>(), (list, e) => list.Append(transform(e)));
+            return elements.Aggregate(new List<OpenXmlElement>(), (list, e) => list.Append(transform(e)));
         }
     }
 }
