@@ -54,7 +54,8 @@ namespace DocumentFormat.OpenXml.Extensions
         }
 
         /// <summary>
-        /// Sets the element's first child, either replacing an existing one or appending the first one.
+        /// Sets the element's first child of a given type, either replacing an existing
+        /// one or appending the first one.
         /// </summary>
         /// <typeparam name="T">A subclass of OpenXmlElement</typeparam>
         /// <param name="element">The element</param>
