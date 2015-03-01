@@ -5,11 +5,11 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{D552F4C5-4B68-4780-A192-E8729D48A262}</ProjectGuid>
+    <ProjectGuid>{0FFBE211-D608-462A-9BA3-6EF51F801747}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>System.IO.Packaging.FlatOpc</RootNamespace>
-    <AssemblyName>PackagingExtensions</AssemblyName>
+    <RootNamespace>DocumentFormat.OpenXml</RootNamespace>
+    <AssemblyName>OpenXmlExtensions</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -21,6 +21,8 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>
+    </DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -29,6 +31,8 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>
+    </DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -41,14 +45,21 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="PackagingExtensions.cs" />
-    <Compile Include="FlatOpcPackage.cs" />
-    <Compile Include="FlatOpcPackagePart.cs" />
-    <Compile Include="FlatOpcPackagePartStream.cs" />
+    <Compile Include="Extensions\CustomXmlPartExtensions.cs" />
+    <Compile Include="Extensions\OpenXmlPackageExtensions.cs" />
+    <Compile Include="Extensions\OpenXmlElementExtensions.cs" />
+    <Compile Include="Extensions\OpenXmlPartExtensions.cs" />
+    <Compile Include="Extensions\WordprocessingDocumentExtensions.cs" />
+    <Compile Include="Extensions\ParagraphExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Transforms\ListExtensions.cs" />
+    <Compile Include="Transforms\OpenXmlTransforms.cs" />
+    <Compile Include="Transforms\TransformTools.cs" />
+    <Compile Include="Transforms\XmlTransforms.cs" />
+    <Compile Include="Transforms\XslOpenXmlTransform.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Open-XML-SDK\Open-XML-SDK.csproj">
+    <ProjectReference Include="..\..\Open-XML-SDK\Open-XML-SDK.csproj">
       <Project>{55FB0A8A-B816-4DC9-9BB4-4DB5B5950F5A}</Project>
       <Name>Open-XML-SDK</Name>
     </ProjectReference>

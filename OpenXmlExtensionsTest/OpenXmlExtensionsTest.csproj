@@ -59,7 +59,7 @@
     <Compile Include="TestTools.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Open-XML-SDK\Open-XML-SDK.csproj">
+    <ProjectReference Include="..\..\Open-XML-SDK\Open-XML-SDK.csproj">
       <Project>{55FB0A8A-B816-4DC9-9BB4-4DB5B5950F5A}</Project>
       <Name>Open-XML-SDK</Name>
     </ProjectReference>
