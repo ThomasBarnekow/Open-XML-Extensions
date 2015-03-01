@@ -22,16 +22,13 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
-
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace DocumentFormat.OpenXml.Extensions
 {
     /// <summary>
-    ///
     /// </summary>
     public static class ParagraphExtensions
     {
@@ -39,20 +36,28 @@ namespace DocumentFormat.OpenXml.Extensions
         public static readonly string DefaultCharacterStyleId = "DefaultParagraphFont";
         public static readonly int BodyTextOutlineLevel = 10;
 
-        public static string GetParagraphStyleId(this Paragraph paragraph)
+        public static Style GetCharacterStyle(this Paragraph paragraph, WordprocessingDocument document)
         {
-            if (paragraph.ParagraphProperties != null)
-                return paragraph.ParagraphProperties.GetParagraphStyleId();
+            if (document == null)
+                throw new ArgumentNullException("document");
 
-            return DefaultParagraphStyleId;
+            var styleId = paragraph.GetCharacterStyleId();
+            if (styleId != null)
+                return document.GetCharacterStyle(styleId);
+
+            return null;
         }
 
-        public static string GetParagraphStyleId(this ParagraphProperties pPr)
+        public static Style GetCharacterStyle(this ParagraphProperties pPr, WordprocessingDocument document)
         {
-            if (pPr.ParagraphStyleId != null && pPr.ParagraphStyleId.Val != null)
-                return pPr.ParagraphStyleId.Val.Value;
+            if (document == null)
+                throw new ArgumentNullException("document");
 
-            return DefaultParagraphStyleId;
+            var styleId = pPr.GetCharacterStyleId();
+            if (styleId != null)
+                return document.GetCharacterStyle(styleId);
+
+            return null;
         }
 
         public static string GetCharacterStyleId(this Paragraph paragraph)
@@ -67,11 +72,111 @@ namespace DocumentFormat.OpenXml.Extensions
         {
             if (pPr.ParagraphMarkRunProperties != null)
             {
-                RunStyle rStyle = pPr.ParagraphMarkRunProperties.GetFirstChild<RunStyle>();
+                var rStyle = pPr.ParagraphMarkRunProperties.GetFirstChild<RunStyle>();
                 if (rStyle != null && rStyle.Val != null)
                     return rStyle.Val.Value;
             }
             return DefaultCharacterStyleId;
+        }
+
+        public static T GetLeafElement<T>(this Style style)
+            where T : OpenXmlLeafElement
+        {
+            var leaf = style.Descendants<T>().FirstOrDefault();
+            if (leaf != null)
+                return leaf;
+
+            if (style.BasedOn != null)
+            {
+                var baseStyle = style.Parent.Elements<Style>()
+                    .FirstOrDefault(e => e.StyleId.Value == style.BasedOn.Val.Value);
+                if (baseStyle != null)
+                    return baseStyle.GetLeafElement<T>();
+            }
+
+            return null;
+        }
+
+        public static T GetLeafElement<T>(this ParagraphProperties pPr, WordprocessingDocument document)
+            where T : OpenXmlLeafElement
+        {
+            // See whether the paragraph properties have this leaf element.
+            var leaf = pPr.Descendants<T>().FirstOrDefault();
+            if (leaf != null)
+                return leaf;
+
+            // Don't look further if no document was given.
+            if (document == null)
+                return null;
+
+            // See whether the paragraph style has it.
+            var style = pPr.GetParagraphStyle(document);
+            if (style != null)
+            {
+                leaf = style.GetLeafElement<T>();
+                if (leaf != null)
+                    return leaf;
+            }
+
+            // See whether a potential character style has it.
+            var rStyle = pPr.GetCharacterStyle(document);
+            if (rStyle != null)
+            {
+                leaf = rStyle.Descendants<T>().FirstOrDefault();
+                return leaf;
+            }
+
+            // There is no such leaf.
+            return null;
+        }
+
+        public static int GetListLevel(this Paragraph paragraph, WordprocessingDocument document)
+        {
+            if (document == null)
+                throw new ArgumentNullException("document");
+
+            var pPr = paragraph.ParagraphProperties;
+            if (pPr != null)
+            {
+                // Check whether paragraph has numbering properties.
+                var numPr = pPr.NumberingProperties;
+                if (numPr != null)
+                {
+                    var ilvl = numPr.NumberingLevelReference;
+                    if (ilvl != null)
+                        return ilvl.Val + 1;
+                    return 1;
+                }
+                // Check whether the style has numbering properties.
+                var style = paragraph.GetParagraphStyle(document);
+                var spPr = style.StyleParagraphProperties;
+                if (spPr != null)
+                {
+                    numPr = spPr.NumberingProperties;
+                    if (numPr != null)
+                    {
+                        var ilvl = numPr.NumberingLevelReference;
+                        if (ilvl != null)
+                            return ilvl.Val + 1;
+                        return 1;
+                    }
+                }
+            }
+
+            // No numbering properties found.
+            return 0;
+        }
+
+        public static int GetOutlineLevel(this Paragraph paragraph, WordprocessingDocument document)
+        {
+            if (document == null)
+                throw new ArgumentNullException("document");
+
+            var style = document.GetParagraphStyle(paragraph.GetParagraphStyleId());
+            if (style != null && style.StyleParagraphProperties != null &&
+                style.StyleParagraphProperties.OutlineLevel != null)
+                return style.StyleParagraphProperties.OutlineLevel.Val + 1;
+            return BodyTextOutlineLevel;
         }
 
         public static Style GetParagraphStyle(this Paragraph paragraph, WordprocessingDocument document)
@@ -90,92 +195,30 @@ namespace DocumentFormat.OpenXml.Extensions
             return document.GetParagraphStyle(pPr.GetParagraphStyleId());
         }
 
-        public static Style GetCharacterStyle(this Paragraph paragraph, WordprocessingDocument document)
+        public static string GetParagraphStyleId(this Paragraph paragraph)
         {
-            if (document == null)
-                throw new ArgumentNullException("document");
+            if (paragraph.ParagraphProperties != null)
+                return paragraph.ParagraphProperties.GetParagraphStyleId();
 
-            string styleId = paragraph.GetCharacterStyleId();
-            if (styleId != null)
-                return document.GetCharacterStyle(styleId);
-
-            return null;
+            return DefaultParagraphStyleId;
         }
 
-        public static Style GetCharacterStyle(this ParagraphProperties pPr, WordprocessingDocument document)
+        public static string GetParagraphStyleId(this ParagraphProperties pPr)
         {
-            if (document == null)
-                throw new ArgumentNullException("document");
+            if (pPr.ParagraphStyleId != null && pPr.ParagraphStyleId.Val != null)
+                return pPr.ParagraphStyleId.Val.Value;
 
-            string styleId = pPr.GetCharacterStyleId();
-            if (styleId != null)
-                return document.GetCharacterStyle(styleId);
-
-            return null;
-        }
-
-        public static int GetOutlineLevel(this Paragraph paragraph, WordprocessingDocument document)
-        {
-            if (document == null)
-                throw new ArgumentNullException("document");
-
-            Style style = document.GetParagraphStyle(paragraph.GetParagraphStyleId());
-            if (style != null && style.StyleParagraphProperties != null && style.StyleParagraphProperties.OutlineLevel != null)
-                return style.StyleParagraphProperties.OutlineLevel.Val + 1;
-            else
-                return BodyTextOutlineLevel;
-        }
-
-        public static int GetListLevel(this Paragraph paragraph, WordprocessingDocument document)
-        {
-            if (document == null)
-                throw new ArgumentNullException("document");
-
-            ParagraphProperties pPr = paragraph.ParagraphProperties;
-            if (pPr != null)
-            {
-                // Check whether paragraph has numbering properties.
-                NumberingProperties numPr = pPr.NumberingProperties;
-                if (numPr != null)
-                {
-                    NumberingLevelReference ilvl = numPr.NumberingLevelReference;
-                    if (ilvl != null)
-                        return ilvl.Val + 1;
-                    else
-                        return 1;
-                }
-                else
-                {
-                    // Check whether the style has numbering properties.
-                    Style style = paragraph.GetParagraphStyle(document);
-                    StyleParagraphProperties spPr = style.StyleParagraphProperties;
-                    if (spPr != null)
-                    {
-                        numPr = spPr.NumberingProperties;
-                        if (numPr != null)
-                        {
-                            NumberingLevelReference ilvl = numPr.NumberingLevelReference;
-                            if (ilvl != null)
-                                return ilvl.Val + 1;
-                            else
-                                return 1;
-                        }
-                    }
-                }
-            }
-
-            // No numbering properties found.
-            return 0;
+            return DefaultParagraphStyleId;
         }
 
         public static T GetPropertiesLeafElement<T>(this Paragraph paragraph, WordprocessingDocument document)
             where T : OpenXmlLeafElement
         {
             // See whether the paragraph properties have this leaf element.
-            ParagraphProperties pPr = paragraph.ParagraphProperties;
+            var pPr = paragraph.ParagraphProperties;
             if (pPr != null)
             {
-                T leaf = pPr.Descendants<T>().FirstOrDefault();
+                var leaf = pPr.Descendants<T>().FirstOrDefault();
                 if (leaf != null)
                     return leaf;
             }
@@ -185,21 +228,20 @@ namespace DocumentFormat.OpenXml.Extensions
                 return null;
 
             // See whether the paragraph style has it.
-            Style style = paragraph.GetParagraphStyle(document);
+            var style = paragraph.GetParagraphStyle(document);
             if (style != null)
             {
-                T leaf = style.GetLeafElement<T>();
+                var leaf = style.GetLeafElement<T>();
                 if (leaf != null)
                     return leaf;
             }
 
             // See whether a potential character style has it.
-            Style rStyle = paragraph.GetCharacterStyle(document);
+            var rStyle = paragraph.GetCharacterStyle(document);
             if (rStyle != null)
             {
-                T leaf = rStyle.Descendants<T>().FirstOrDefault();
-                if (leaf != null)
-                    return leaf;
+                var leaf = rStyle.Descendants<T>().FirstOrDefault();
+                return leaf;
             }
 
             // There is no such leaf.
@@ -208,111 +250,44 @@ namespace DocumentFormat.OpenXml.Extensions
 
         public static bool IsBold(this Paragraph paragraph, WordprocessingDocument document)
         {
-            Bold b = paragraph.GetPropertiesLeafElement<Bold>(document);
-            if (b == null)
-                return false;
-
-            return b.Val == null ? true : b.Val.Value;
+            var b = paragraph.GetPropertiesLeafElement<Bold>(document);
+            return b != null && (b.Val == null || b.Val.Value);
         }
 
         public static bool IsItalic(this Paragraph paragraph, WordprocessingDocument document)
         {
-            Italic i = paragraph.GetPropertiesLeafElement<Italic>(document);
-            if (i == null)
-                return false;
-
-            return i.Val == null ? true : i.Val.Value;
-        }
-
-        public static bool IsUnderline(this Paragraph paragraph, WordprocessingDocument document)
-        {
-            Underline u = paragraph.GetPropertiesLeafElement<Underline>(document);
-            if (u == null)
-                return false;
-
-            return u.Val == null ? true : u.Val.Value == UnderlineValues.Single;
+            var i = paragraph.GetPropertiesLeafElement<Italic>(document);
+            return i != null && (i.Val == null || i.Val.Value);
         }
 
         public static bool IsKeepNext(this Paragraph paragraph, WordprocessingDocument document)
         {
-            KeepNext keepNext = paragraph.GetPropertiesLeafElement<KeepNext>(document);
-            if (keepNext == null)
-                return false;
-
-            return keepNext.Val == null ? true : keepNext.Val.Value;
+            var keepNext = paragraph.GetPropertiesLeafElement<KeepNext>(document);
+            return keepNext != null && (keepNext.Val == null || keepNext.Val.Value);
         }
 
         public static bool IsKeepNext(this ParagraphProperties pPr, WordprocessingDocument document)
         {
-            KeepNext keepNext = pPr.GetLeafElement<KeepNext>(document);
-            if (keepNext == null)
-                return false;
-
-            return keepNext.Val == null ? true : keepNext.Val.Value;
+            var keepNext = pPr.GetLeafElement<KeepNext>(document);
+            return keepNext != null && (keepNext.Val == null || keepNext.Val.Value);
         }
 
-        public static T GetLeafElement<T>(this Style style)
-            where T : OpenXmlLeafElement
+        public static bool IsUnderline(this Paragraph paragraph, WordprocessingDocument document)
         {
-            T leaf = style.Descendants<T>().FirstOrDefault();
-            if (leaf != null)
-                return leaf;
-
-            if (style.BasedOn != null)
-            {
-                Style baseStyle = style.Parent.Elements<Style>()
-                    .FirstOrDefault(e => e.StyleId.Value == style.BasedOn.Val.Value);
-                if (baseStyle != null)
-                    return baseStyle.GetLeafElement<T>();
-            }
-
-            return null;
-        }
-
-        public static T GetLeafElement<T>(this ParagraphProperties pPr, WordprocessingDocument document)
-            where T : OpenXmlLeafElement
-        {
-            // See whether the paragraph properties have this leaf element.
-            T leaf = pPr.Descendants<T>().FirstOrDefault();
-            if (leaf != null)
-                return leaf;
-
-            // Don't look further if no document was given.
-            if (document == null)
-                return null;
-
-            // See whether the paragraph style has it.
-            Style style = pPr.GetParagraphStyle(document);
-            if (style != null)
-            {
-                leaf = style.GetLeafElement<T>();
-                if (leaf != null)
-                    return leaf;
-            }
-
-            // See whether a potential character style has it.
-            Style rStyle = pPr.GetCharacterStyle(document);
-            if (rStyle != null)
-            {
-                leaf = rStyle.Descendants<T>().FirstOrDefault();
-                if (leaf != null)
-                    return leaf;
-            }
-
-            // There is no such leaf.
-            return null;
+            var u = paragraph.GetPropertiesLeafElement<Underline>(document);
+            return u != null && u.Val != null && u.Val.Value == UnderlineValues.Single;
         }
 
         #region Trimming
 
         public static Paragraph TrimStart(this Paragraph paragraph, params char[] trimChars)
         {
-            Paragraph p = (Paragraph)paragraph.CloneNode(true);
+            var p = (Paragraph) paragraph.CloneNode(true);
 
-            bool continueTrimming = true;
+            var continueTrimming = true;
             while (continueTrimming)
             {
-                Text t = p.Descendants<Text>().FirstOrDefault();
+                var t = p.Descendants<Text>().FirstOrDefault();
 
                 continueTrimming = t != null && t.Parent.Parent is Paragraph;
                 if (continueTrimming)
@@ -330,12 +305,12 @@ namespace DocumentFormat.OpenXml.Extensions
 
         public static Paragraph TrimEnd(this Paragraph paragraph, params char[] trimChars)
         {
-            Paragraph p = (Paragraph)paragraph.CloneNode(true);
+            var p = (Paragraph) paragraph.CloneNode(true);
 
-            bool continueTrimming = true;
+            var continueTrimming = true;
             while (continueTrimming)
             {
-                Text t = p.Descendants<Text>().LastOrDefault();
+                var t = p.Descendants<Text>().LastOrDefault();
 
                 continueTrimming = t != null && t.Parent.Parent is Paragraph;
                 if (continueTrimming)

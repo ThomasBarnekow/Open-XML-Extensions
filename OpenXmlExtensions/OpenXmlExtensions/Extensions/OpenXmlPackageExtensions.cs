@@ -22,16 +22,28 @@
  */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using DocumentFormat.OpenXml.Packaging;
 
 namespace DocumentFormat.OpenXml.Extensions
 {
     /// <summary>
-    /// Extensions for <see cref="OpenXmlPackage"/>.
+    /// Extensions for <see cref="OpenXmlPackage" />.
     /// </summary>
     public static class OpenXmlPackageExtensions
     {
+        /// <summary>
+        /// Gets all parts contained in the <see cref="OpenXmlPackage" /> in a
+        /// breadth-first fashion, i.e., the direct and indirect relationship
+        /// targets of the package (where the <see cref="OpenXmlPartContainer.Parts" />
+        /// property only returns the direct relationship targets).
+        /// </summary>
+        public static IEnumerable<OpenXmlPart> GetAllParts(this OpenXmlPackage package)
+        {
+            return new OpenXmlParts(package);
+        }
+
         /// <summary>
         /// Replaces the document's contents with the contents of the given replacement's contents.
         /// </summary>
@@ -58,26 +70,15 @@ namespace DocumentFormat.OpenXml.Extensions
             document.Package.Flush();
             return document;
         }
-
-        /// <summary>
-        /// Gets all parts contained in the <see cref="OpenXmlPackage"/> in a 
-        /// breadth-first fashion, i.e., the direct and indirect relationship
-        /// targets of the package (where the <see cref="OpenXmlPartContainer.Parts"/>
-        /// property only returns the direct relationship targets).
-        /// </summary>
-        public static IEnumerable<OpenXmlPart> GetAllParts(this OpenXmlPackage package)
-        {
-            return new OpenXmlParts(package);
-        }
     }
 
     /// <summary>
-    /// Enumeration of all parts contained in an <see cref="OpenXmlPackage"/> 
+    /// Enumeration of all parts contained in an <see cref="OpenXmlPackage" />
     /// rather than just the direct relationship targets.
     /// </summary>
     public class OpenXmlParts : IEnumerable<OpenXmlPart>
     {
-        private OpenXmlPackage package;
+        private readonly OpenXmlPackage _package;
 
         #region Constructor
 
@@ -87,7 +88,7 @@ namespace DocumentFormat.OpenXml.Extensions
         /// <param name="package">The OpenXmlPackage to use to enumerate parts</param>
         public OpenXmlParts(OpenXmlPackage package)
         {
-            this.package = package;
+            _package = package;
         }
 
         #endregion
@@ -100,11 +101,11 @@ namespace DocumentFormat.OpenXml.Extensions
         /// <returns></returns>
         public IEnumerator<OpenXmlPart> GetEnumerator()
         {
-            List<OpenXmlPart> parts = new List<OpenXmlPart>();
-            Queue<OpenXmlPart> queue = new Queue<OpenXmlPart>();
+            var parts = new List<OpenXmlPart>();
+            var queue = new Queue<OpenXmlPart>();
 
             // Enqueue all direct relationship targets.
-            foreach (var target in package.Parts)
+            foreach (var target in _package.Parts)
             {
                 queue.Enqueue(target.OpenXmlPart);
             }
@@ -112,7 +113,7 @@ namespace DocumentFormat.OpenXml.Extensions
             while (queue.Count > 0)
             {
                 // Add next part from queue to the set of parts to be returned.
-                OpenXmlPart part = queue.Dequeue();
+                var part = queue.Dequeue();
                 parts.Add(part);
 
                 // Enqueue all direct relationship targets of current part that
@@ -139,7 +140,7 @@ namespace DocumentFormat.OpenXml.Extensions
         /// Gets an enumerator for parts in the whole package.
         /// </summary>
         /// <returns></returns>
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
         }

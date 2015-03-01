@@ -22,23 +22,20 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
-
 using DocumentFormat.OpenXml.Packaging;
 
 namespace DocumentFormat.OpenXml.Extensions
 {
     /// <summary>
-    /// Provides extension methods for the <see cref="OpenXmlPart"/> class.
+    /// Provides extension methods for the <see cref="OpenXmlPart" /> class.
     /// </summary>
     public static class OpenXmlPartExtensions
     {
         /// <summary>
-        /// Returns the <see cref="OpenXmlPart"/>'s root <see cref="XElement"/>.
+        /// Returns the <see cref="OpenXmlPart" />'s root <see cref="XElement" />.
         /// </summary>
         /// <param name="part">The part.</param>
         /// <returns>The root element.</returns>
@@ -49,9 +46,9 @@ namespace DocumentFormat.OpenXml.Extensions
 
             try
             {
-                using (Stream stream = part.GetStream())
-                using (StreamReader streamReader = new StreamReader(stream))
-                using (XmlReader xmlReader = XmlReader.Create(streamReader))
+                using (var stream = part.GetStream())
+                using (var streamReader = new StreamReader(stream))
+                using (var xmlReader = XmlReader.Create(streamReader))
                     return XElement.Load(xmlReader);
             }
             catch
@@ -61,7 +58,35 @@ namespace DocumentFormat.OpenXml.Extensions
         }
 
         /// <summary>
-        /// Sets the <see cref="OpenXmlPart"/>'s root <see cref="XElement"/>, replacing an
+        /// Returns the <see cref="OpenXmlPart" />'s root element <see cref="XName" />.
+        /// </summary>
+        /// <param name="part">The part.</param>
+        /// <returns>The name.</returns>
+        public static XName GetRootName(this OpenXmlPart part)
+        {
+            if (part == null)
+                throw new ArgumentNullException("part");
+
+            var root = part.GetRootElement();
+            return root != null ? root.Name : null;
+        }
+
+        /// <summary>
+        /// Returns the <see cref="OpenXmlPart" />'s root element <see cref="XNamespace" />.
+        /// </summary>
+        /// <param name="part">The part.</param>
+        /// <returns>The namespace.</returns>
+        public static XNamespace GetRootNamespace(this OpenXmlPart part)
+        {
+            if (part == null)
+                throw new ArgumentNullException("part");
+
+            var root = part.GetRootElement();
+            return root != null ? root.Name.Namespace : null;
+        }
+
+        /// <summary>
+        /// Sets the <see cref="OpenXmlPart" />'s root <see cref="XElement" />, replacing an
         /// existing one if it exists.
         /// </summary>
         /// <param name="part">The part.</param>
@@ -73,44 +98,10 @@ namespace DocumentFormat.OpenXml.Extensions
             if (root == null)
                 throw new ArgumentNullException("root");
 
-            using (Stream stream = part.GetStream(FileMode.Create))
-            using (StreamWriter streamWriter = new StreamWriter(stream))
-            using (XmlWriter xmlWriter = XmlWriter.Create(streamWriter))
+            using (var stream = part.GetStream(FileMode.Create))
+            using (var streamWriter = new StreamWriter(stream))
+            using (var xmlWriter = XmlWriter.Create(streamWriter))
                 root.WriteTo(xmlWriter);
-        }
-
-        /// <summary>
-        /// Returns the <see cref="OpenXmlPart"/>'s root element <see cref="XName"/>.
-        /// </summary>
-        /// <param name="part">The part.</param>
-        /// <returns>The name.</returns>
-        public static XName GetRootName(this OpenXmlPart part)
-        {
-            if (part == null)
-                throw new ArgumentNullException("part");
-
-            XElement root = part.GetRootElement();
-            if (root != null)
-                return root.Name;
-            else
-                return null;
-        }
-        
-        /// <summary>
-        /// Returns the <see cref="OpenXmlPart"/>'s root element <see cref="XNamespace"/>.
-        /// </summary>
-        /// <param name="part">The part.</param>
-        /// <returns>The namespace.</returns>
-        public static XNamespace GetRootNamespace(this OpenXmlPart part)
-        {
-            if (part == null)
-                throw new ArgumentNullException("part");
-
-            XElement root = part.GetRootElement();
-            if (root != null)
-                return root.Name.Namespace;
-            else
-                return null;
         }
     }
 }

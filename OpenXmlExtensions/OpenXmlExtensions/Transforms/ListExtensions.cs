@@ -1,7 +1,7 @@
 ﻿/*
  * ListExtensions.cs - List<T> Extensions for Open XML Transforms
  * 
- * Copyright 2014 Thomas Barnekow
+ * Copyright 2014-2015 Thomas Barnekow
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,36 +40,51 @@ namespace DocumentFormat.OpenXml.Transforms
         /// <param name="list">The list.</param>
         /// <param name="itemOrCollection">A single item or a collection of items.</param>
         /// <returns>The list to which the item or list of items was added.</returns>
-        public static List<T> Append<T>(this List<T> list, object itemOrCollection)
+        public static List<T> Append<T>(this List<T> list, object itemOrCollection) where T : class
         {
-            if (itemOrCollection != null)
+            if (itemOrCollection == null) return list;
+
+            var item = itemOrCollection as T;
+            if (item != null)
             {
-                if (itemOrCollection is T)
-                    list.Add((T)itemOrCollection);
-                else if (itemOrCollection is IEnumerable<T>)
-                    list.AddRange((IEnumerable<T>)itemOrCollection);
-                else
-                    throw new ArgumentException("Illegal item type: " + itemOrCollection.GetType(), "itemOrCollection");
+                list.Add(item);
+                return list;
             }
-            return list;
+
+            var collection = itemOrCollection as IEnumerable<T>;
+            if (collection != null)
+            {
+                list.AddRange((IEnumerable<T>) itemOrCollection);
+                return list;
+            }
+
+            throw new ArgumentException("Illegal item type: " + itemOrCollection.GetType(), "itemOrCollection");
         }
     }
 
     public static class SetExtensions
     {
-        public static HashSet<T> Append<T>(this HashSet<T> set, object itemOrCollection)
+        public static HashSet<T> Append<T>(this HashSet<T> set, object itemOrCollection) where T : class
         {
-            if (itemOrCollection != null)
+            if (itemOrCollection == null) return set;
+
+            var item = itemOrCollection as T;
+            if (item != null)
             {
-                if (itemOrCollection is T)
-                    set.Add((T)itemOrCollection);
-                else if (itemOrCollection is IEnumerable<T>)
-                    foreach (T item in (IEnumerable<T>)itemOrCollection)
-                        set.Add(item);
-                else
-                    throw new ArgumentException("Illegal item type: " + itemOrCollection.GetType(), "itemOrCollection");
+                set.Add(item);
+                return set;
             }
-            return set;
+
+            var collection = itemOrCollection as IEnumerable<T>;
+            if (collection != null)
+            {
+                foreach (var member in collection)
+                    set.Add(member);
+
+                return set;
+            }
+
+            throw new ArgumentException("Illegal item type: " + itemOrCollection.GetType(), "itemOrCollection");
         }
     }
 }

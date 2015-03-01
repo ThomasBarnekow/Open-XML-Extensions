@@ -47,10 +47,6 @@
   <ItemGroup>
     <Compile Include="Extensions\CustomXmlPartExtensions.cs" />
     <Compile Include="Extensions\OpenXmlPackageExtensions.cs" />
-    <Compile Include="IO\OpenXmlMemoryStream.cs" />
-    <Compile Include="IO\PresentationMemoryStream.cs" />
-    <Compile Include="IO\SpreadsheetMemoryStream.cs" />
-    <Compile Include="IO\WordprocessingMemoryStream.cs" />
     <Compile Include="Extensions\OpenXmlElementExtensions.cs" />
     <Compile Include="Extensions\OpenXmlPartExtensions.cs" />
     <Compile Include="Extensions\WordprocessingDocumentExtensions.cs" />

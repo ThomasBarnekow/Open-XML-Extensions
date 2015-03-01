@@ -22,18 +22,14 @@
  */
 
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Xml;
 using System.Xml.Linq;
-
 using DocumentFormat.OpenXml.Packaging;
 
 namespace DocumentFormat.OpenXml.Extensions
 {
     /// <summary>
-    /// Provides extension methods for the <see cref="CustomXmlPart"/> class.
+    /// Provides extension methods for the <see cref="CustomXmlPart" /> class.
     /// </summary>
     public static class CustomXmlPartExtensions
     {
@@ -44,12 +40,12 @@ namespace DocumentFormat.OpenXml.Extensions
             if (newNs == null)
                 throw new ArgumentNullException("newNs");
 
-            XElement oldRoot = part.GetRootElement();
+            var oldRoot = part.GetRootElement();
             if (oldRoot == null)
                 return null;
 
-            XNamespace oldNs = oldRoot.Name.Namespace;
-            XElement newRoot = ReplaceNamespace(oldRoot, oldNs, newNs, newPrefix);
+            var oldNs = oldRoot.Name.Namespace;
+            var newRoot = ReplaceNamespace(oldRoot, oldNs, newNs, newPrefix);
             part.SetRootElement(newRoot);
 
             return part;
@@ -62,9 +58,9 @@ namespace DocumentFormat.OpenXml.Extensions
 
         internal static XObject TransformNamespace(XObject obj, XNamespace oldNs, XNamespace newNs, string newPrefix)
         {
-            if (obj is XElement)
+            var element = obj as XElement;
+            if (element != null)
             {
-                XElement element = (XElement)obj;
                 if (element.Name.Namespace == oldNs)
                 {
                     return new XElement(newNs.GetName(element.Name.LocalName),
@@ -75,9 +71,10 @@ namespace DocumentFormat.OpenXml.Extensions
                     element.Attributes().Select(a => TransformNamespace(a, oldNs, newNs, newPrefix)),
                     element.Nodes().Select(n => TransformNamespace(n, oldNs, newNs, newPrefix)));
             }
-            if (obj is XAttribute)
+
+            var attribute = obj as XAttribute;
+            if (attribute != null)
             {
-                XAttribute attribute = (XAttribute)obj;
                 if (attribute.Name.Namespace == oldNs)
                 {
                     return new XAttribute(newNs.GetName(attribute.Name.LocalName), attribute.Value);
@@ -88,6 +85,7 @@ namespace DocumentFormat.OpenXml.Extensions
                 }
                 return attribute;
             }
+
             return obj;
         }
     }

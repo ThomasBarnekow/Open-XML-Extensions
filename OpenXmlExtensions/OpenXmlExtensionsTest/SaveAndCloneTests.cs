@@ -22,25 +22,19 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.IO.Packaging;
-using System.Linq;
 using System.Text;
 using System.Xml;
-using System.Xml.Linq;
-
+using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Extensions;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Wordprocessing;
 using NUnit.Framework;
+using Text = DocumentFormat.OpenXml.Wordprocessing.Text;
 
 namespace OpenXmlExtensionsTest
 {
-    using DocumentFormat.OpenXml;
-    using DocumentFormat.OpenXml.Extensions;
-    using DocumentFormat.OpenXml.IO;
-    using DocumentFormat.OpenXml.Packaging;
-    using DocumentFormat.OpenXml.Transforms;
-    using DocumentFormat.OpenXml.Wordprocessing;
-
     [TestFixture]
     public class SaveAndCloneTests
     {

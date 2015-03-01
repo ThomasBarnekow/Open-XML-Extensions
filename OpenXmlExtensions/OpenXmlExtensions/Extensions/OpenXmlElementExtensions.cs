@@ -24,18 +24,37 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
-using DocumentFormat.OpenXml;
-using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Transforms;
 
 namespace DocumentFormat.OpenXml.Extensions
 {
     /// <summary>
-    /// Provides extension methods for <see cref="OpenXmlElement"/> class.
+    /// Provides extension methods for <see cref="OpenXmlElement" /> class.
     /// </summary>
     public static class OpenXmlElementExtensions
     {
+        /// <summary>
+        /// Transforms the elements (children) of the given element, applying the given transform.
+        /// </summary>
+        /// <remarks>
+        /// This method uses the Linq to XML Aggregate extension method in conjunction with
+        /// the <see cref="ListExtensions.Append{T}" /> extension method to support transforms
+        /// producing generic <see cref="IEnumerable{OpenXmlElement}" /> collections as a result.
+        /// For each descendant, this incurs the overhead of creating a new
+        /// <see cref="List{OpenXmlElement}" />. If it is guaranteed that transforms only return
+        /// single <see cref="OpenXmlElement" /> instances or null, that overhead can be avoided
+        /// by using the <see cref="SelectResultsOf" /> extension method.
+        /// </remarks>
+        /// <param name="elements">The collection of elements to be transformed.</param>
+        /// <param name="transform">The transform to be applied.</param>
+        /// <returns>The collection of transformed elements.</returns>
+        /// <seealso cref="SelectResultsOf" />
+        public static IEnumerable<OpenXmlElement> AggregateResultsOf(this IEnumerable<OpenXmlElement> elements,
+            Func<OpenXmlElement, object> transform)
+        {
+            return elements.Aggregate(new List<OpenXmlElement>(), (list, e) => list.Append(transform(e)));
+        }
+
         /// <summary>
         /// Gets or creates the element's first child of type T.
         /// </summary>
@@ -44,13 +63,34 @@ namespace DocumentFormat.OpenXml.Extensions
         /// <returns>The existing or newly created first child of this element</returns>
         public static T Produce<T>(this OpenXmlElement element) where T : OpenXmlElement, new()
         {
-            T child = element.GetFirstChild<T>();
-            if (child == null)
-            {
-                child = new T();
-                element.AppendChild<T>(child);
-            }
+            var child = element.GetFirstChild<T>();
+            if (child != null) return child;
+
+            child = new T();
+            element.AppendChild(child);
             return child;
+        }
+
+        /// <summary>
+        /// Transforms the elements (children) of the given element, applying the given transform.
+        /// </summary>
+        /// <remarks>
+        /// This method uses the Linq to XML Select extension method to create the generic
+        /// collection of <see cref="OpenXmlElement" /> instances to be appended to the root
+        /// element. With the current Open XML SDK, this does not work in case the result of
+        /// a single transform is a collection of <see cref="OpenXmlElement" /> instances.
+        /// If it is not guaranteed that only single <see cref="OpenXmlElement" /> instances
+        /// or null are returned by the transform, <see cref="AggregateResultsOf" /> should
+        /// be used instead of this method.
+        /// </remarks>
+        /// <param name="elements">The collection of elements to be transformed.</param>
+        /// <param name="transform">The transform to be applied.</param>
+        /// <returns>The collection of transformed elements.</returns>
+        /// <seealso cref="AggregateResultsOf" />
+        public static IEnumerable<OpenXmlElement> SelectResultsOf(this IEnumerable<OpenXmlElement> elements,
+            Func<OpenXmlElement, object> transform)
+        {
+            return elements.Select(e => (OpenXmlElement) transform(e));
         }
 
         /// <summary>
@@ -63,91 +103,44 @@ namespace DocumentFormat.OpenXml.Extensions
         /// <returns>The new child</returns>
         public static T SetFirstChild<T>(this OpenXmlElement element, T newChild) where T : OpenXmlElement
         {
-            T oldChild = element.GetFirstChild<T>();
-            if (oldChild != null)
-                return element.ReplaceChild<T>(newChild, oldChild);
-            else
-                return element.AppendChild<T>(newChild);
+            var oldChild = element.GetFirstChild<T>();
+            return oldChild != null ? element.ReplaceChild(newChild, oldChild) : element.AppendChild(newChild);
         }
 
         /// <summary>
         /// Performs a transform of the given element and its descendants, creating a shallow
         /// clone of the element and applying the given transform to its elements.
         /// </summary>
-        /// <typeparam name="T"><see cref="OpenXmlElement"/> or a subclass thereof.</typeparam>
+        /// <typeparam name="T"><see cref="OpenXmlElement" /> or a subclass thereof.</typeparam>
         /// <param name="element">The element to be transformed.</param>
         /// <param name="transform">The transform to be applied to the element's descendants.</param>
         /// <returns>The transformed element.</returns>
-        /// <seealso cref="TransformAggregating"/>
-        /// <seealso cref="SelectResultsOf"/>
-        public static T TransformSelecting<T>(this T element, Func<OpenXmlElement, object> transform)
-            where T : OpenXmlElement
-        {
-            T transformedElement = (T)element.CloneNode(false);
-            transformedElement.Append(element.Elements().SelectResultsOf(e => transform(e)));
-            return transformedElement;
-        }
-
-        /// <summary>
-        /// Transforms the elements (children) of the given element, applying the given transform.
-        /// </summary>
-        /// <remarks>
-        /// This method uses the Linq to XML Select extension method to create the generic
-        /// collection of <see cref="OpenXmlElement"/> instances to be appended to the root
-        /// element. With the current Open XML SDK, this does not work in case the result of
-        /// a single transform is a collection of <see cref="OpenXmlElement"/> instances.
-        /// If it is not guaranteed that only single <see cref="OpenXmlElement"/> instances
-        /// or null are returned by the transform, <see cref="AggregateResultsOf"/> should
-        /// be used instead of this method.
-        /// </remarks>
-        /// <param name="elements">The collection of elements to be transformed.</param>
-        /// <param name="transform">The transform to be applied.</param>
-        /// <returns>The collection of transformed elements.</returns>
-        /// <seealso cref="AggregateResultsOf"/>
-        public static IEnumerable<OpenXmlElement> SelectResultsOf(this IEnumerable<OpenXmlElement> elements,
-            Func<OpenXmlElement, object> transform)
-        {
-            return elements.Select(e => (OpenXmlElement)transform(e));
-        }
-
-        /// <summary>
-        /// Performs a transform of the given element and its descendants, creating a shallow
-        /// clone of the element and applying the given transform to its elements.
-        /// </summary>
-        /// <typeparam name="T"><see cref="OpenXmlElement"/> or a subclass thereof.</typeparam>
-        /// <param name="element">The element to be transformed.</param>
-        /// <param name="transform">The transform to be applied to the element's descendants.</param>
-        /// <returns>The transformed element.</returns>
-        /// <seealso cref="TransformSelecting"/>
-        /// <seealso cref="AggregateResultsOf"/>
+        /// <seealso cref="TransformSelecting{T}" />
+        /// <seealso cref="AggregateResultsOf" />
         public static T TransformAggregating<T>(this T element, Func<OpenXmlElement, object> transform)
             where T : OpenXmlElement
         {
-            T transformedElement = (T)element.CloneNode(false);
-            transformedElement.Append(element.Elements().AggregateResultsOf(e => transform(e)));
+            var transformedElement = (T) element.CloneNode(false);
+            transformedElement.Append(element.Elements().AggregateResultsOf(transform));
             return transformedElement;
         }
 
         /// <summary>
-        /// Transforms the elements (children) of the given element, applying the given transform.
+        /// Performs a transform of the given element and its descendants, creating a shallow
+        /// clone of the element and applying the given transform to its elements.
         /// </summary>
-        /// <remarks>
-        /// This method uses the Linq to XML Aggregate extension method in conjunction with
-        /// the <see cref="ListExtensions.Append{T}"/> extension method to support transforms
-        /// producing generic <see cref="IEnumerable{OpenXmlElement}"/> collections as a result.
-        /// For each descendant, this incurs the overhead of creating a new
-        /// <see cref="List{OpenXmlElement}"/>. If it is guaranteed that transforms only return
-        /// single <see cref="OpenXmlElement"/> instances or null, that overhead can be avoided
-        /// by using the <see cref="SelectResultsOf"/> extension method.
-        /// </remarks>
-        /// <param name="elements">The collection of elements to be transformed.</param>
-        /// <param name="transform">The transform to be applied.</param>
-        /// <returns>The collection of transformed elements.</returns>
-        /// <seealso cref="SelectResultsOf"/>
-        public static IEnumerable<OpenXmlElement> AggregateResultsOf(this IEnumerable<OpenXmlElement> elements,
-            Func<OpenXmlElement, object> transform)
+        /// <typeparam name="T"><see cref="OpenXmlElement" /> or a subclass thereof.</typeparam>
+        /// <param name="element">The element to be transformed.</param>
+        /// <param name="transform">The transform to be applied to the element's descendants.</param>
+        /// <returns>The transformed element.</returns>
+        /// <seealso cref="TransformAggregating{T}" />
+        /// <seealso cref="SelectResultsOf" />
+        public static T TransformSelecting<T>(this T element, Func<OpenXmlElement, object> transform)
+            where T : OpenXmlElement
         {
-            return elements.Aggregate(new List<OpenXmlElement>(), (list, e) => list.Append(transform(e)));
+            var transformedElement = (T) element.CloneNode(false);
+            transformedElement.Append(element.Elements().SelectResultsOf(transform));
+            return transformedElement;
         }
     }
 }

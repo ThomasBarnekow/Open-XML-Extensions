@@ -23,13 +23,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
-
 using DocumentFormat.OpenXml.CustomXmlDataProperties;
-using DocumentFormat.OpenXml.CustomXmlSchemaReferences;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Transforms;
 using DocumentFormat.OpenXml.Wordprocessing;
@@ -37,60 +35,11 @@ using DocumentFormat.OpenXml.Wordprocessing;
 namespace DocumentFormat.OpenXml.Extensions
 {
     /// <summary>
-    /// Provides extension methods for <see cref="WordprocessingDocument"/> class.
+    /// Provides extension methods for <see cref="WordprocessingDocument" /> class.
     /// </summary>
+    [SuppressMessage("ReSharper", "PossiblyMistakenUseOfParamsMethod")]
     public static class WordprocessingDocumentExtensions
     {
-        /// <summary>
-        /// Returns the <see cref="CustomXmlPart"/> having a root element with the given <see cref="XNamespace"/> 
-        /// or null if there is no such <see cref="CustomXmlPart"/>.
-        /// </summary>
-        /// <param name="document">The document</param>
-        /// <param name="ns">The namespace</param>
-        /// <returns>The corresponding part or null</returns>
-        public static CustomXmlPart GetCustomXmlPart(this WordprocessingDocument document, XNamespace ns)
-        {
-            if (document != null && document.MainDocumentPart != null)
-                return document.MainDocumentPart
-                    .CustomXmlParts
-                    .LastOrDefault(p => p.GetRootNamespace() == ns);
-            else
-                return null;
-        }
-
-        /// <summary>
-        /// Creates a <see cref="CustomXmlPart"/> with the given root <see cref="XElement"/>.
-        /// </summary>
-        /// <param name="document">The document.</param>
-        /// <param name="rootElement">The root element.</param>
-        /// <returns>The newly created custom XML part.</returns>
-        public static CustomXmlPart CreateCustomXmlPart(this WordprocessingDocument document, XElement rootElement)
-        {
-            if (document == null)
-                throw new ArgumentNullException("document");
-            if (rootElement == null)
-                throw new ArgumentNullException("rootElement");
-
-            // Create a ds:dataStoreItem associated with the custom XML part's root element.
-            DataStoreItem dataStoreItem = new DataStoreItem();
-            dataStoreItem.ItemId = "{" + Guid.NewGuid().ToString().ToUpper() + "}";
-            dataStoreItem.SchemaReferences = new SchemaReferences();
-            if (rootElement.Name.Namespace != XNamespace.None)
-                dataStoreItem.SchemaReferences.Append(new SchemaReference { Uri = rootElement.Name.NamespaceName });
-
-            // Create the custom XML part.
-            CustomXmlPart customXmlPart = document.MainDocumentPart.AddCustomXmlPart(CustomXmlPartType.CustomXml);
-            customXmlPart.SetRootElement(rootElement);
-
-            // Create the custom XML properties part.
-            CustomXmlPropertiesPart propertiesPart = customXmlPart.AddNewPart<CustomXmlPropertiesPart>();
-            propertiesPart.DataStoreItem = dataStoreItem;
-            propertiesPart.DataStoreItem.Save();
-
-            document.Package.Flush();
-            return customXmlPart;
-        }
-
         /// <summary>
         /// Binds content controls to a custom XML part created or updated from the given XML document.
         /// </summary>
@@ -105,7 +54,7 @@ namespace DocumentFormat.OpenXml.Extensions
 
             // Get or create custom XML part. This assumes that we only have a single custom
             // XML part for any given namespace.
-            CustomXmlPart destPart = document.GetCustomXmlPart(rootElement.Name.Namespace);
+            var destPart = document.GetCustomXmlPart(rootElement.Name.Namespace);
             if (destPart == null)
                 destPart = document.CreateCustomXmlPart(rootElement);
             else
@@ -127,16 +76,16 @@ namespace DocumentFormat.OpenXml.Extensions
             if (part == null)
                 throw new ArgumentNullException("part");
 
-            XElement customXmlRootElement = part.GetRootElement();
-            string storeItemId = part.CustomXmlPropertiesPart.DataStoreItem.ItemId.Value;
+            var customXmlRootElement = part.GetRootElement();
+            var storeItemId = part.CustomXmlPropertiesPart.DataStoreItem.ItemId.Value;
 
             // Bind w:sdt elements contained in main document part.
-            OpenXmlPartRootElement partRootElement = document.MainDocumentPart.RootElement;
+            var partRootElement = document.MainDocumentPart.RootElement;
             BindContentControls(partRootElement, customXmlRootElement, storeItemId);
             partRootElement.Save();
 
             // Bind w:sdt elements contained in header parts.
-            foreach (OpenXmlPartRootElement headerRootElement in document.MainDocumentPart
+            foreach (var headerRootElement in document.MainDocumentPart
                 .HeaderParts.Select(p => p.RootElement))
             {
                 BindContentControls(headerRootElement, customXmlRootElement, storeItemId);
@@ -144,7 +93,7 @@ namespace DocumentFormat.OpenXml.Extensions
             }
 
             // Bind w:sdt elements contained in footer parts.
-            foreach (OpenXmlPartRootElement footerRootElement in document.MainDocumentPart
+            foreach (var footerRootElement in document.MainDocumentPart
                 .FooterParts.Select(p => p.RootElement))
             {
                 BindContentControls(footerRootElement, customXmlRootElement, storeItemId);
@@ -154,12 +103,12 @@ namespace DocumentFormat.OpenXml.Extensions
 
         /// <summary>
         /// Bind the content controls (w:sdt elements) contained in the content part's XML document to the
-        /// custom XML part identified by the given storeItemId. 
+        /// custom XML part identified by the given storeItemId.
         /// </summary>
-        /// <param name="contentRootElement">The content part's <see cref="OpenXmlPartRootElement"/>.</param>
-        /// <param name="customXmlRootElement">The custom XML part's root <see cref="XElement"/>.</param>
+        /// <param name="contentRootElement">The content part's <see cref="OpenXmlPartRootElement" />.</param>
+        /// <param name="customXmlRootElement">The custom XML part's root <see cref="XElement" />.</param>
         /// <param name="storeItemId">The w:storeItemId to be used for data binding.</param>
-        public static void BindContentControls(OpenXmlPartRootElement contentRootElement, 
+        public static void BindContentControls(OpenXmlPartRootElement contentRootElement,
             XElement customXmlRootElement, string storeItemId)
         {
             if (contentRootElement == null)
@@ -168,44 +117,44 @@ namespace DocumentFormat.OpenXml.Extensions
                 throw new ArgumentNullException("customXmlRootElement");
             if (storeItemId == null)
                 throw new ArgumentNullException("storeItemId");
-            
+
             // Get all w:sdt elements with matching tags.
-            IEnumerable<string> tags = customXmlRootElement.Descendants()
+            var tags = customXmlRootElement.Descendants()
                 .Where(e => !e.HasElements)
                 .Select(e => e.Name.LocalName);
-            IEnumerable<SdtElement> sdts = contentRootElement.Descendants<SdtElement>()
+            var sdts = contentRootElement.Descendants<SdtElement>()
                 .Where(sdt => sdt.SdtProperties.GetFirstChild<Tag>() != null &&
                               tags.Contains(sdt.SdtProperties.GetFirstChild<Tag>().Val.Value));
 
-            foreach (SdtElement sdt in sdts)
+            foreach (var sdt in sdts)
             {
                 // The tag value is supposed to point to a descendant element of the custom XML
                 // part's root element.
-                string childElementName = sdt.SdtProperties.GetFirstChild<Tag>().Val.Value;
-                XElement leafElement = customXmlRootElement.Descendants()
+                var childElementName = sdt.SdtProperties.GetFirstChild<Tag>().Val.Value;
+                var leafElement = customXmlRootElement.Descendants()
                     .First(e => e.Name.LocalName == childElementName);
 
                 // Define the list of path elements, using one of the following two options:
                 // 1. The following statement is used as the basis for building the full path
                 // expression (the same as built by Microsoft Word).
-                List<XElement> pathElements = leafElement.AncestorsAndSelf().Reverse().ToList();
+                var pathElements = leafElement.AncestorsAndSelf().Reverse().ToList();
 
                 // 2. The following statement is used as the basis for building the short xPath
                 // expression "//ns0:leafElement[1]".
                 // List<XElement> pathElements = new List<XElement>() { leafElement };
 
                 // Build list of namespace names for building the prefix mapping later on.
-                List<string> nsList = pathElements
+                var nsList = pathElements
                     .Where(e => e.Name.Namespace != XNamespace.None)
                     .Aggregate(new HashSet<string>(), (set, e) => set.Append(e.Name.NamespaceName))
                     .ToList();
 
                 // Build mapping from local names to namespace indices.
-                Dictionary<string, int> nsDict = pathElements
+                var nsDict = pathElements
                     .ToDictionary(e => e.Name.LocalName, e => nsList.IndexOf(e.Name.NamespaceName));
 
                 // Build prefix mappings.
-                string prefixMappings = nsList.Select((ns, index) => new { ns, index })
+                var prefixMappings = nsList.Select((ns, index) => new {ns, index})
                     .Aggregate(new StringBuilder(), (sb, t) =>
                         sb.Append("xmlns:ns").Append(t.index).Append("='").Append(t.ns).Append("' "))
                     .ToString().Trim();
@@ -222,19 +171,19 @@ namespace DocumentFormat.OpenXml.Extensions
                 // Func<string, string> prefix = localName =>
                 //     nsDict[localName] >= 0 ? "//ns" + nsDict[localName] + ":" : "//";
 
-                string xPath = pathElements
+                var xPath = pathElements
                     .Select(e => prefix(e.Name.LocalName) + e.Name.LocalName + "[1]")
                     .Aggregate(new StringBuilder(), (sb, pc) => sb.Append(pc)).ToString();
 
                 // Create and configure new data binding.
-                DataBinding dataBinding = new DataBinding();
+                var dataBinding = new DataBinding();
                 if (!String.IsNullOrEmpty(prefixMappings))
                     dataBinding.PrefixMappings = prefixMappings;
                 dataBinding.XPath = xPath;
                 dataBinding.StoreItemId = storeItemId;
 
                 // Add or replace data binding.
-                DataBinding currentDataBinding = sdt.SdtProperties.GetFirstChild<DataBinding>();
+                var currentDataBinding = sdt.SdtProperties.GetFirstChild<DataBinding>();
                 if (currentDataBinding != null)
                     sdt.SdtProperties.ReplaceChild(dataBinding, currentDataBinding);
                 else
@@ -243,103 +192,42 @@ namespace DocumentFormat.OpenXml.Extensions
         }
 
         /// <summary>
-        /// Gets or creates the root element of the document's style definitions part.
+        /// Creates a <see cref="CustomXmlPart" /> with the given root <see cref="XElement" />.
         /// </summary>
-        /// <param name="document">The document</param>
-        /// <returns>The root element of the document's style definitions part</returns>
-        public static Styles ProduceStylesElement(this WordprocessingDocument document)
+        /// <param name="document">The document.</param>
+        /// <param name="rootElement">The root element.</param>
+        /// <returns>The newly created custom XML part.</returns>
+        public static CustomXmlPart CreateCustomXmlPart(this WordprocessingDocument document, XElement rootElement)
         {
             if (document == null)
                 throw new ArgumentNullException("document");
+            if (rootElement == null)
+                throw new ArgumentNullException("rootElement");
 
-            // Access the styles part.
-            StyleDefinitionsPart part = document.MainDocumentPart.StyleDefinitionsPart;
-            if (part == null)
-                part = document.MainDocumentPart.AddNewPart<StyleDefinitionsPart>();
-
-            // Access the root element of the styles part.
-            if (part.Styles == null)
+            // Create a ds:dataStoreItem associated with the custom XML part's root element.
+            var dataStoreItem = new DataStoreItem
             {
-                // Create and save the root element
-                part.Styles = new Styles();
-                part.Styles.Save();
-                document.Package.Flush();
-            }
+                ItemId = "{" + Guid.NewGuid().ToString().ToUpper() + "}",
+                SchemaReferences = new SchemaReferences()
+            };
+            if (rootElement.Name.Namespace != XNamespace.None)
+                dataStoreItem.SchemaReferences.Append(new SchemaReference {Uri = rootElement.Name.NamespaceName});
 
-            // Done.
-            return part.Styles;
+            // Create the custom XML part.
+            var customXmlPart = document.MainDocumentPart.AddCustomXmlPart(CustomXmlPartType.CustomXml);
+            customXmlPart.SetRootElement(rootElement);
+
+            // Create the custom XML properties part.
+            var propertiesPart = customXmlPart.AddNewPart<CustomXmlPropertiesPart>();
+            propertiesPart.DataStoreItem = dataStoreItem;
+            propertiesPart.DataStoreItem.Save();
+
+            document.Package.Flush();
+            return customXmlPart;
         }
 
         /// <summary>
-        /// Gets or crates the root element of the document's numbering definitions part.
-        /// </summary>
-        /// <param name="document">The document</param>
-        /// <returns>The root element of the document's numbering definitions part</returns>
-        public static Numbering ProduceNumberingElement(this WordprocessingDocument document)
-        {
-            if (document == null)
-                throw new ArgumentNullException("document");
-
-            // Access the numbering part.
-            NumberingDefinitionsPart part = document.MainDocumentPart.NumberingDefinitionsPart;
-            if (part == null)
-                part = document.MainDocumentPart.AddNewPart<NumberingDefinitionsPart>();
-
-            // Access the root element of the numbering part.
-            if (part.Numbering == null)
-            {
-                // Create and save the root element
-                part.Numbering = new Numbering();
-                part.Numbering.Save();
-                document.Package.Flush();
-            }
-
-            // Done.
-            return part.Numbering;
-        }
- 
-        /// <summary>
-        /// Gets the paragraph <see cref="Style"/> with the given id.
-        /// </summary>
-        /// <param name="document">The document</param>
-        /// <param name="styleId">The style's id</param>
-        /// <returns>The corresponding style</returns>
-        public static Style GetParagraphStyle(this WordprocessingDocument document, 
-            string styleId)
-        {
-            if (document == null)
-                throw new ArgumentNullException("document");
-            if (styleId == null)
-                throw new ArgumentNullException("styleId");
-
-            Styles styles = document.ProduceStylesElement();
-            return styles.Elements<Style>().FirstOrDefault<Style>(
-                style => style.StyleId == styleId &&
-                         style.Type == StyleValues.Paragraph);
-        }
-
-        /// <summary>
-        /// Gets the character <see cref="Style"/> with the given id.
-        /// </summary>
-        /// <param name="document">The document</param>
-        /// <param name="styleId">The style's id</param>
-        /// <returns>The corresponding style</returns>
-        public static Style GetCharacterStyle(this WordprocessingDocument document, 
-            string styleId)
-        {
-            if (document == null)
-                throw new ArgumentNullException("document");
-            if (styleId == null)
-                throw new ArgumentNullException("styleId");
-
-            Styles styles = document.ProduceStylesElement();
-            return styles.Elements<Style>().FirstOrDefault<Style>(
-                style => style.StyleId == styleId &&
-                         style.Type == StyleValues.Character);
-        }
-
-        /// <summary>
-        /// Creates a new paragraph style with the specified style ID, primary 
+        /// Creates a new paragraph style with the specified style ID, primary
         /// style name, and aliases and add it to the specified style definitions
         /// part. Saves the data in the DOM tree back to the part.
         /// </summary>
@@ -349,7 +237,7 @@ namespace DocumentFormat.OpenXml.Extensions
         /// <param name="basedOn">The base style</param>
         /// <param name="nextStyle">The next paragraph's style</param>
         /// <returns>The newly created style</returns>
-        public static Style CreateParagraphStyle(this WordprocessingDocument document, 
+        public static Style CreateParagraphStyle(this WordprocessingDocument document,
             string styleId, string styleName, string basedOn, string nextStyle)
         {
             // Check parameters
@@ -365,12 +253,12 @@ namespace DocumentFormat.OpenXml.Extensions
                 throw new ArgumentNullException("nextStyle");
 
             // Check whether the style already exists.
-            Style style = document.GetParagraphStyle(styleId);
+            var style = document.GetParagraphStyle(styleId);
             if (style != null)
                 throw new ArgumentException("Style '" + styleId + "' already exists!", styleId);
 
             // Create a new paragraph style element and specify key attributes.
-            style = new Style() { Type = StyleValues.Paragraph, CustomStyle = true, StyleId = styleId };
+            style = new Style {Type = StyleValues.Paragraph, CustomStyle = true, StyleId = styleId};
 
             // Add key child elements
             style.Produce<StyleName>().Val = styleName;
@@ -378,90 +266,69 @@ namespace DocumentFormat.OpenXml.Extensions
             style.Produce<NextParagraphStyle>().Val = nextStyle;
 
             // Add the style to the styles part
-            return document.ProduceStylesElement().AppendChild<Style>(style);
+            return document.ProduceStylesElement().AppendChild(style);
         }
 
         /// <summary>
-        /// Gets the last section's properties
+        /// Gets the character <see cref="Style" /> with the given id.
         /// </summary>
         /// <param name="document">The document</param>
-        /// <returns>The last section's <see cref="SectionProperties"/> element</returns>
-        public static SectionProperties GetSectionProperties(this WordprocessingDocument document)
+        /// <param name="styleId">The style's id</param>
+        /// <returns>The corresponding style</returns>
+        public static Style GetCharacterStyle(this WordprocessingDocument document,
+            string styleId)
         {
-            // Check prerequisites
-            if (document == null) 
+            if (document == null)
                 throw new ArgumentNullException("document");
+            if (styleId == null)
+                throw new ArgumentNullException("styleId");
 
-            // The body's SectionProperties element represents the last section's properties
-            return document.MainDocumentPart.Document.Body.GetFirstChild<SectionProperties>();
+            var styles = document.ProduceStylesElement();
+            return styles.Elements<Style>().FirstOrDefault<Style>(
+                style => style.StyleId == styleId &&
+                         style.Type == StyleValues.Character);
         }
 
         /// <summary>
-        /// Gets the last section's <see cref="PageMargin"/> element.
+        /// Returns the <see cref="CustomXmlPart" /> having a root element with the given <see cref="XNamespace" />
+        /// or null if there is no such <see cref="CustomXmlPart" />.
         /// </summary>
         /// <param name="document">The document</param>
-        /// <returns>The <see cref="PageMargin"/> element</returns>
-        public static PageMargin GetPageMargin(this WordprocessingDocument document)
+        /// <param name="ns">The namespace</param>
+        /// <returns>The corresponding part or null</returns>
+        public static CustomXmlPart GetCustomXmlPart(this WordprocessingDocument document, XNamespace ns)
         {
-            if (document == null) throw new ArgumentNullException("document");
-            return document.GetSectionProperties().GetFirstChild<PageMargin>();
+            if (document != null && document.MainDocumentPart != null)
+                return document.MainDocumentPart
+                    .CustomXmlParts
+                    .LastOrDefault(p => p.GetRootNamespace() == ns);
+
+            return null;
         }
 
         /// <summary>
-        /// Gets the last section's <see cref="PageSize"/> element.
-        /// </summary>
-        /// <param name="document">The document</param>
-        /// <returns>The <see cref="PageSize"/> element</returns>
-        public static PageSize GetPageSize(this WordprocessingDocument document)
-        {
-            if (document == null) throw new ArgumentNullException("document");
-            return document.GetSectionProperties().GetFirstChild<PageSize>();
-        }
-
-        /// <summary>
-        /// Gets the <see cref="ParagraphPropertiesBaseStyle"/> ancestor of the document's styles element.
-        /// </summary>
-        /// <param name="document">The document</param>
-        /// <returns>The <see cref="ParagraphPropertiesBaseStyle"/></returns>
-        public static ParagraphPropertiesBaseStyle GetParagraphPropertiesBaseStyle(this WordprocessingDocument document)
-        {
-            if (document == null) 
-                throw new ArgumentNullException("document");
-            
-            DocDefaults docDefaults = document.ProduceStylesElement().DocDefaults;
-            return docDefaults.ParagraphPropertiesDefault.ParagraphPropertiesBaseStyle;
-        }
-
-        /// <summary>
-        /// 
         /// </summary>
         /// <param name="document"></param>
         /// <returns></returns>
-        public static int GetDefaultSpaceBefore(this WordprocessingDocument document)
+        public static int GetDefaultFontSize(this WordprocessingDocument document)
         {
-            if (document == null) 
+            if (document == null)
                 throw new ArgumentNullException("document");
-            
-            ParagraphPropertiesBaseStyle pPr = document.GetParagraphPropertiesBaseStyle();
-            if (pPr.SpacingBetweenLines == null)
-                return 0;
-            if (pPr.SpacingBetweenLines.Before == null)
-                return 0;
 
-            return int.Parse(pPr.SpacingBetweenLines.Before);
+            var rPr = document.GetRunPropertiesBaseStyle();
+            return rPr.FontSize != null ? int.Parse(rPr.FontSize.Val) : 20;
         }
 
         /// <summary>
-        /// 
         /// </summary>
         /// <param name="document"></param>
         /// <returns></returns>
         public static int GetDefaultSpaceAfter(this WordprocessingDocument document)
         {
-            if (document == null) 
+            if (document == null)
                 throw new ArgumentNullException("document");
 
-            ParagraphPropertiesBaseStyle pPr = document.GetParagraphPropertiesBaseStyle();
+            var pPr = document.GetParagraphPropertiesBaseStyle();
             if (pPr.SpacingBetweenLines == null)
                 return 0;
             if (pPr.SpacingBetweenLines.After == null)
@@ -471,34 +338,146 @@ namespace DocumentFormat.OpenXml.Extensions
         }
 
         /// <summary>
-        /// Gets the <see cref="RunPropertiesBaseStyle"/> ancestor of the document's styles element.
+        /// </summary>
+        /// <param name="document"></param>
+        /// <returns></returns>
+        public static int GetDefaultSpaceBefore(this WordprocessingDocument document)
+        {
+            if (document == null)
+                throw new ArgumentNullException("document");
+
+            var pPr = document.GetParagraphPropertiesBaseStyle();
+            if (pPr.SpacingBetweenLines == null)
+                return 0;
+            if (pPr.SpacingBetweenLines.Before == null)
+                return 0;
+
+            return int.Parse(pPr.SpacingBetweenLines.Before);
+        }
+
+        /// <summary>
+        /// Gets the last section's <see cref="PageMargin" /> element.
         /// </summary>
         /// <param name="document">The document</param>
-        /// <returns>The <see cref="RunPropertiesBaseStyle"/></returns>
+        /// <returns>The <see cref="PageMargin" /> element</returns>
+        public static PageMargin GetPageMargin(this WordprocessingDocument document)
+        {
+            if (document == null) throw new ArgumentNullException("document");
+            return document.GetSectionProperties().GetFirstChild<PageMargin>();
+        }
+
+        /// <summary>
+        /// Gets the last section's <see cref="PageSize" /> element.
+        /// </summary>
+        /// <param name="document">The document</param>
+        /// <returns>The <see cref="PageSize" /> element</returns>
+        public static PageSize GetPageSize(this WordprocessingDocument document)
+        {
+            if (document == null) throw new ArgumentNullException("document");
+            return document.GetSectionProperties().GetFirstChild<PageSize>();
+        }
+
+        /// <summary>
+        /// Gets the <see cref="ParagraphPropertiesBaseStyle" /> ancestor of the document's styles element.
+        /// </summary>
+        /// <param name="document">The document</param>
+        /// <returns>The <see cref="ParagraphPropertiesBaseStyle" /></returns>
+        public static ParagraphPropertiesBaseStyle GetParagraphPropertiesBaseStyle(this WordprocessingDocument document)
+        {
+            if (document == null)
+                throw new ArgumentNullException("document");
+
+            var docDefaults = document.ProduceStylesElement().DocDefaults;
+            return docDefaults.ParagraphPropertiesDefault.ParagraphPropertiesBaseStyle;
+        }
+
+        /// <summary>
+        /// Gets the paragraph <see cref="Style" /> with the given id.
+        /// </summary>
+        /// <param name="document">The document</param>
+        /// <param name="styleId">The style's id</param>
+        /// <returns>The corresponding style</returns>
+        public static Style GetParagraphStyle(this WordprocessingDocument document, string styleId)
+        {
+            if (document == null)
+                throw new ArgumentNullException("document");
+            if (styleId == null)
+                throw new ArgumentNullException("styleId");
+
+            var styles = document.ProduceStylesElement();
+            return styles.Elements<Style>().FirstOrDefault<Style>(
+                style => style.StyleId == styleId &&
+                         style.Type == StyleValues.Paragraph);
+        }
+
+        /// <summary>
+        /// Gets the <see cref="RunPropertiesBaseStyle" /> ancestor of the document's styles element.
+        /// </summary>
+        /// <param name="document">The document</param>
+        /// <returns>The <see cref="RunPropertiesBaseStyle" /></returns>
         public static RunPropertiesBaseStyle GetRunPropertiesBaseStyle(this WordprocessingDocument document)
         {
-            if (document == null) 
+            if (document == null)
                 throw new ArgumentNullException("document");
-            
-            DocDefaults docDefaults = document.ProduceStylesElement().DocDefaults;
+
+            var docDefaults = document.ProduceStylesElement().DocDefaults;
             return docDefaults.RunPropertiesDefault.RunPropertiesBaseStyle;
         }
 
         /// <summary>
-        /// 
+        /// Gets the last section's properties
         /// </summary>
-        /// <param name="document"></param>
-        /// <returns></returns>
-        public static int GetDefaultFontSize(this WordprocessingDocument document)
+        /// <param name="document">The document</param>
+        /// <returns>The last section's <see cref="SectionProperties" /> element</returns>
+        public static SectionProperties GetSectionProperties(this WordprocessingDocument document)
         {
-            if (document == null) 
+            if (document == null)
                 throw new ArgumentNullException("document");
 
-            RunPropertiesBaseStyle rPr = document.GetRunPropertiesBaseStyle();
-            if (rPr.FontSize != null)
-                return int.Parse(rPr.FontSize.Val);
-            else
-                return 20;
+            // The body's SectionProperties element represents the last section's properties.
+            return document.MainDocumentPart.Document.Body.GetFirstChild<SectionProperties>();
+        }
+
+        /// <summary>
+        /// Gets or crates the root element of the document's numbering definitions part.
+        /// </summary>
+        /// <param name="document">The document</param>
+        /// <returns>The root element of the document's numbering definitions part</returns>
+        public static Numbering ProduceNumberingElement(this WordprocessingDocument document)
+        {
+            if (document == null)
+                throw new ArgumentNullException("document");
+
+            var part = document.MainDocumentPart.NumberingDefinitionsPart ??
+                       document.MainDocumentPart.AddNewPart<NumberingDefinitionsPart>();
+
+            if (part.Numbering != null)
+                return part.Numbering;
+
+            part.Numbering = new Numbering();
+            part.Numbering.Save();
+            return part.Numbering;
+        }
+
+        /// <summary>
+        /// Gets or creates the root element of the document's style definitions part.
+        /// </summary>
+        /// <param name="document">The document</param>
+        /// <returns>The root element of the document's style definitions part</returns>
+        public static Styles ProduceStylesElement(this WordprocessingDocument document)
+        {
+            if (document == null)
+                throw new ArgumentNullException("document");
+
+            var part = document.MainDocumentPart.StyleDefinitionsPart ??
+                       document.MainDocumentPart.AddNewPart<StyleDefinitionsPart>();
+
+            if (part.Styles != null)
+                return part.Styles;
+
+            part.Styles = new Styles();
+            part.Styles.Save();
+            return part.Styles;
         }
     }
 }

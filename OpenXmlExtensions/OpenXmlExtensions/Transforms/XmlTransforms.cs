@@ -21,14 +21,8 @@
  * Version: 1.0.01
  */
 
-using System;
-using System.Collections.Generic;
-using System.Xml;
 using System.Xml.Linq;
-
-using DocumentFormat.OpenXml.Extensions;
 using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace DocumentFormat.OpenXml.Transforms
 {
@@ -38,61 +32,55 @@ namespace DocumentFormat.OpenXml.Transforms
     /// This interface defines methods implemented by transforms from generic XML to
     /// Open XML documents.
     /// </summary>
-    /// <typeparam name="DocumentType">A subclass of <see cref="OpenXmlPackage"/>.</typeparam>
-    public interface IXmlToOpenXmlTransform<DocumentType>
-        where DocumentType : OpenXmlPackage
+    /// <typeparam name="TDocument">A subclass of <see cref="OpenXmlPackage" />.</typeparam>
+    public interface IXmlToOpenXmlTransform<out TDocument>
+        where TDocument : OpenXmlPackage
     {
         /// <summary>
         /// Transforms a generic XML string to an Open XML document.
         /// </summary>
         /// <param name="text">The XML string.</param>
         /// <returns>The Open XML document.</returns>
-        DocumentType ToOpenXml(string text);
+        TDocument ToOpenXml(string text);
 
         /// <summary>
-        /// Transforms a generic <see cref="XDocument"/> into an Open XML document.
+        /// Transforms a generic <see cref="XDocument" /> into an Open XML document.
         /// </summary>
-        /// <param name="document">The <see cref="XDocument"/>.</param>
+        /// <param name="document">The <see cref="XDocument" />.</param>
         /// <returns>The Open XML document.</returns>
-        DocumentType ToOpenXml(XDocument document);
+        TDocument ToOpenXml(XDocument document);
     }
 
     /// <summary>
     /// This class is the abstract base class for transforms from generic XML to Open XML
-    /// documents that perform their transform based on an XML <see cref="string"/>.
+    /// documents that perform their transform based on an XML <see cref="string" />.
     /// </summary>
-    /// <typeparam name="DocumentType">A subclass of <see cref="OpenXmlPackage"/>.</typeparam>
-    public abstract class XmlStringToOpenXmlTransform<DocumentType> : IXmlToOpenXmlTransform<DocumentType>
-        where DocumentType : OpenXmlPackage
+    /// <typeparam name="TDocument">A subclass of <see cref="OpenXmlPackage" />.</typeparam>
+    public abstract class XmlStringToOpenXmlTransform<TDocument> : IXmlToOpenXmlTransform<TDocument>
+        where TDocument : OpenXmlPackage
     {
-        public abstract DocumentType ToOpenXml(string text);
+        public abstract TDocument ToOpenXml(string text);
 
-        public DocumentType ToOpenXml(XDocument document)
+        public TDocument ToOpenXml(XDocument document)
         {
-            if (document == null)
-                return null;
-
-            return ToOpenXml(document.ToString()); 
+            return document == null ? null : ToOpenXml(document.ToString());
         }
     }
 
     /// <summary>
     /// This class is the abstract base class for transforms from generic XML to Open XML
-    /// documents that perform their transform based on an <see cref="XDocument"/>.
+    /// documents that perform their transform based on an <see cref="XDocument" />.
     /// </summary>
-    /// <typeparam name="DocumentType">A subclass of <see cref="OpenXmlPackage"/>.</typeparam>
-    public abstract class XDocumentToOpenXmlTransform<DocumentType> : IXmlToOpenXmlTransform<DocumentType>
-        where DocumentType : OpenXmlPackage
+    /// <typeparam name="TDocument">A subclass of <see cref="OpenXmlPackage" />.</typeparam>
+    public abstract class XDocumentToOpenXmlTransform<TDocument> : IXmlToOpenXmlTransform<TDocument>
+        where TDocument : OpenXmlPackage
     {
-        public DocumentType ToOpenXml(string text)
+        public TDocument ToOpenXml(string text)
         {
-            if (text == null)
-                return null;
-
-            return ToOpenXml(XDocument.Parse(text));
+            return text == null ? null : ToOpenXml(XDocument.Parse(text));
         }
 
-        public abstract DocumentType ToOpenXml(XDocument document);
+        public abstract TDocument ToOpenXml(XDocument document);
     }
 
     #endregion
@@ -104,100 +92,82 @@ namespace DocumentFormat.OpenXml.Transforms
     /// XML documents. All methods will perform the exact same transform and only take
     /// the input in different formats.
     /// </summary>
-    /// <seealso cref="FlatOpcStringToXmlTransform{DocumentType}"/>
-    /// <seealso cref="FlatOpcDocumentToXmlTransform{DocumentType}"/>
-    /// <seealso cref="OpenXmlPackageToXmlTransform{DocumentType}"/>
-    /// <typeparam name="DocumentType">A subclass of <see cref="OpenXmlPackage"/>.</typeparam>
-    public interface IOpenXmlToXmlTransform<DocumentType>
-        where DocumentType : OpenXmlPackage
-    {        
+    /// <seealso cref="FlatOpcStringToXmlTransform{DocumentType}" />
+    /// <seealso cref="FlatOpcDocumentToXmlTransform{DocumentType}" />
+    /// <seealso cref="OpenXmlPackageToXmlTransform{DocumentType}" />
+    /// <typeparam name="TDocument">A subclass of <see cref="OpenXmlPackage" />.</typeparam>
+    public interface IOpenXmlToXmlTransform<in TDocument>
+        where TDocument : OpenXmlPackage
+    {
         XDocument ToXml(string text);
         XDocument ToXml(XDocument document);
-        XDocument ToXml(DocumentType packageDocument);
+        XDocument ToXml(TDocument packageDocument);
     }
 
     /// <summary>
     /// This class is the abstract base class for transforms from Open XML to generic
-    /// XML documents that perform their transform on the Flat OPC <see cref="string"/> 
+    /// XML documents that perform their transform on the Flat OPC <see cref="string" />
     /// representation of an Open XML package.
     /// </summary>
-    /// <typeparam name="DocumentType">A subclass of <see cref="OpenXmlPackage"/>.</typeparam>
-    public abstract class FlatOpcStringToXmlTransform<DocumentType> : IOpenXmlToXmlTransform<DocumentType>
-        where DocumentType : OpenXmlPackage
+    /// <typeparam name="TDocument">A subclass of <see cref="OpenXmlPackage" />.</typeparam>
+    public abstract class FlatOpcStringToXmlTransform<TDocument> : IOpenXmlToXmlTransform<TDocument>
+        where TDocument : OpenXmlPackage
     {
         public abstract XDocument ToXml(string text);
 
         public XDocument ToXml(XDocument document)
         {
-            if (document == null)
-                return null;
-
-            return ToXml(document.ToString());
+            return document == null ? null : ToXml(document.ToString());
         }
 
-        public XDocument ToXml(DocumentType packageDocument)
+        public XDocument ToXml(TDocument packageDocument)
         {
-            if (packageDocument == null)
-                return null;
-
-            return ToXml(packageDocument.ToFlatOpcString());
+            return packageDocument == null ? null : ToXml(packageDocument.ToFlatOpcString());
         }
     }
 
     /// <summary>
     /// This class is the abstract base class for transforms from Open XML to generic
-    /// XML documents that perform their transform on the Flat OPC <see cref="XDocument"/>
+    /// XML documents that perform their transform on the Flat OPC <see cref="XDocument" />
     /// representation of an Open XML package, using the Linq to XML classes.
     /// </summary>
-    /// <typeparam name="DocumentType">A subclass of <see cref="OpenXmlPackage"/>.</typeparam>
-    public abstract class FlatOpcDocumentToXmlTransform<DocumentType> : IOpenXmlToXmlTransform<DocumentType>
-        where DocumentType : OpenXmlPackage
+    /// <typeparam name="TDocument">A subclass of <see cref="OpenXmlPackage" />.</typeparam>
+    public abstract class FlatOpcDocumentToXmlTransform<TDocument> : IOpenXmlToXmlTransform<TDocument>
+        where TDocument : OpenXmlPackage
     {
         public XDocument ToXml(string text)
         {
-            if (text == null)
-                return null;
-
-            return ToXml(XDocument.Parse(text));
+            return text == null ? null : ToXml(XDocument.Parse(text));
         }
 
         public abstract XDocument ToXml(XDocument document);
 
-        public XDocument ToXml(DocumentType packageDocument)
+        public XDocument ToXml(TDocument packageDocument)
         {
-            if (packageDocument == null)
-                return null;
-
-            return ToXml(packageDocument.ToFlatOpcDocument());
+            return packageDocument == null ? null : ToXml(packageDocument.ToFlatOpcDocument());
         }
     }
 
     /// <summary>
     /// This class is the abstract base class for transforms from Open XML to generic
     /// XML documents that perform their transform on one of the subclasses of
-    /// <see cref="OpenXmlPackage"/>, using the Open XML SDK. 
+    /// <see cref="OpenXmlPackage" />, using the Open XML SDK.
     /// </summary>
-    /// <typeparam name="DocumentType">A subclass of <see cref="OpenXmlPackage"/>.</typeparam>
-    public abstract class OpenXmlPackageToXmlTransform<DocumentType> : IOpenXmlToXmlTransform<DocumentType>
-        where DocumentType : OpenXmlPackage
+    /// <typeparam name="TDocument">A subclass of <see cref="OpenXmlPackage" />.</typeparam>
+    public abstract class OpenXmlPackageToXmlTransform<TDocument> : IOpenXmlToXmlTransform<TDocument>
+        where TDocument : OpenXmlPackage
     {
         public XDocument ToXml(string text)
         {
-            if (text == null)
-                return null;
-
-            return ToXml(TransformTools.FromFlatOpcString<DocumentType>(text));
+            return text == null ? null : ToXml(TransformTools.FromFlatOpcString<TDocument>(text));
         }
 
         public XDocument ToXml(XDocument document)
         {
-            if (document == null)
-                return null;
-
-            return ToXml(TransformTools.FromFlatOpcDocument<DocumentType>(document));
+            return document == null ? null : ToXml(TransformTools.FromFlatOpcDocument<TDocument>(document));
         }
 
-        public abstract XDocument ToXml(DocumentType packageDocument);
+        public abstract XDocument ToXml(TDocument packageDocument);
     }
 
     #endregion
