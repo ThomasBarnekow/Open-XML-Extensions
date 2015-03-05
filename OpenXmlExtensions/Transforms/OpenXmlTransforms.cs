@@ -306,46 +306,14 @@ namespace DocumentFormat.OpenXml.Transforms
     /// </remarks>
     public abstract class WordprocessingDocumentTransform : OpenXmlPackageTransform<WordprocessingDocument>
     {
-        /// <summary>
-        /// Initializes a new instance of <see cref="WordprocessingDocumentTransform" />.
-        /// </summary>
-        protected WordprocessingDocumentTransform()
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of <see cref="WordprocessingDocumentTransform" />
-        /// with a template <see cref="WordprocessingDocument" />.
-        /// </summary>
-        /// <param name="template">The template to be used.</param>
-        [SuppressMessage("ReSharper", "DoNotCallOverridableMethodsInConstructor")]
-        protected WordprocessingDocumentTransform(WordprocessingDocument template)
-        {
-            Template = template;
-        }
-
-        #region ICloneable Methods
-
-        /// <summary>
-        /// Creates a deep copy of the transform.
-        /// </summary>
-        /// <returns>The clone.</returns>
-        public override object Clone()
-        {
-            var transform = (WordprocessingDocumentTransform) base.Clone();
-            if (Template != null)
-                transform.Template = (WordprocessingDocument) Template.Clone();
-
-            return transform;
-        }
-
-        #endregion
+        private WordprocessingDocument _template;
 
         #region Properties
 
         /// <summary>
         /// Gets or sets the template <see cref="WordprocessingDocument" />.
         /// </summary>
+        [SuppressMessage("ReSharper", "NotResolvedInText")]
         public virtual WordprocessingDocument Template
         {
             get { return _template; }
@@ -364,7 +332,7 @@ namespace DocumentFormat.OpenXml.Transforms
                     value.MainDocumentPart.Document == null ||
                     value.MainDocumentPart.Document.Body == null)
                 {
-                    throw new ArgumentException("Illegal WordprocessingDocument");
+                    throw new ArgumentException("Illegal WordprocessingDocument", "Template");
                 }
 
                 if (value.DocumentType == WordprocessingDocumentType.Document ||
@@ -382,8 +350,6 @@ namespace DocumentFormat.OpenXml.Transforms
                 }
             }
         }
-
-        private WordprocessingDocument _template;
 
         /// <summary>
         /// Gets the template's w:body element. Returns null if no template was specified.
@@ -745,6 +711,23 @@ namespace DocumentFormat.OpenXml.Transforms
         protected virtual object TransformFooter(OpenXmlElement element, WordprocessingDocument packageDocument)
         {
             return element.CloneNode(true);
+        }
+
+        #endregion
+
+        #region ICloneable Methods
+
+        /// <summary>
+        /// Creates a deep copy of the transform.
+        /// </summary>
+        /// <returns>The clone.</returns>
+        public override object Clone()
+        {
+            var transform = (WordprocessingDocumentTransform)base.Clone();
+            if (Template != null)
+                transform.Template = (WordprocessingDocument)Template.Clone();
+
+            return transform;
         }
 
         #endregion

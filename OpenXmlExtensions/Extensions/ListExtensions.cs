@@ -24,7 +24,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace DocumentFormat.OpenXml.Transforms
+namespace DocumentFormat.OpenXml.Extensions
 {
     /// <summary>
     /// This class defines extension methods for the generic <see cref="List{T}"/> class.

@@ -52,7 +52,7 @@
     <Compile Include="Extensions\WordprocessingDocumentExtensions.cs" />
     <Compile Include="Extensions\ParagraphExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Transforms\ListExtensions.cs" />
+    <Compile Include="Extensions\ListExtensions.cs" />
     <Compile Include="Transforms\OpenXmlTransforms.cs" />
     <Compile Include="Transforms\TransformTools.cs" />
     <Compile Include="Transforms\XmlTransforms.cs" />
