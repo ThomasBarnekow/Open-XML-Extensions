@@ -84,7 +84,7 @@ namespace DocumentFormat.OpenXml.Transformation
         /// Transforms an instance of a subclass of <see cref="OpenXmlPackage" /> in-place.
         /// </summary>
         /// <remarks>
-        /// This method, if overridden by a subclass, must transformation the original document
+        /// This method, if overridden by a subclass, must transform the original document
         /// in-place rather than transforming a clone. Otherwise, if called directly, it
         /// will not have the desired effect.
         /// </remarks>
