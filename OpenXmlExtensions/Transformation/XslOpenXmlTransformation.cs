@@ -1,5 +1,5 @@
-﻿/*
- * XslOpenXmlTransform.cs - XSL Open XML Transform
+/*
+ * XslOpenXmlTransformation.cs - XSL Open XML Transformation
  * 
  * Copyright 2014 Thomas Barnekow
  *
@@ -27,49 +27,49 @@ using System.Xml;
 using System.Xml.Xsl;
 using DocumentFormat.OpenXml.Packaging;
 
-namespace DocumentFormat.OpenXml.Transforms
+namespace DocumentFormat.OpenXml.Transformation
 {
     /// <summary>
     /// This class uses XSL Stylesheets to perform Open XML transforms.
     /// </summary>
-    /// <typeparam name="TDocument">A subclass of <see cref="OpenXmlPackage" />.</typeparam>
-    public class XslOpenXmlTransform<TDocument> : FlatOpcStringTransform<TDocument>
+    /// <typeparam name="TDocument">A subclass of <see cref="OpenXmlPackage"/>.</typeparam>
+    public class XslOpenXmlTransformation<TDocument> : FlatOpcStringTransformation<TDocument>
         where TDocument : OpenXmlPackage
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="XslOpenXmlTransform{DocumentType}" /> class.
+        /// Initializes a new instance of the <see cref="XslOpenXmlTransformation{TDocument}" /> class.
         /// </summary>
-        public XslOpenXmlTransform()
+        public XslOpenXmlTransformation()
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="XslOpenXmlTransform{DocumentType}" /> class
+        /// Initializes a new instance of the <see cref="XslOpenXmlTransformation{TDocument}" /> class
         /// with a <see cref="XslCompiledTransform" /> and an <see cref="XsltArgumentList" />.
         /// </summary>
-        /// <param name="xslt">The compiled XSL transform.</param>
-        /// <param name="arguments">The arguments to be passed to the compiled XSL transform.</param>
-        public XslOpenXmlTransform(XslCompiledTransform xslt, XsltArgumentList arguments)
+        /// <param name="xslt">The compiled XSL transformation.</param>
+        /// <param name="arguments">The arguments to be passed to the compiled XSL transformation.</param>
+        public XslOpenXmlTransformation(XslCompiledTransform xslt, XsltArgumentList arguments)
         {
             Xslt = xslt;
             Arguments = arguments;
         }
 
         /// <summary>
-        /// Gets or sets the compiled XSL transform.
+        /// Gets or sets the compiled XSL transformation.
         /// </summary>
         public XslCompiledTransform Xslt { get; set; }
 
         /// <summary>
-        /// Gets or sets the arguments to be passed to the compiled XSL transform.
+        /// Gets or sets the arguments to be passed to the compiled XSL transformation.
         /// </summary>
         public XsltArgumentList Arguments { get; set; }
 
         /// <summary>
         /// Transforms the XML string using the <see cref="XslCompiledTransform" />
-        /// defined by the instance's <see cref="XslOpenXmlTransform{DocumentType}.Xslt" />
+        /// defined by the instance's <see cref="XslOpenXmlTransformation{TDocument}.Xslt" />
         /// property and the <see cref="XsltArgumentList" /> defined in the instance's
-        /// <see cref="XslOpenXmlTransform{DocumentType}.Arguments" /> property.
+        /// <see cref="XslOpenXmlTransformation{TDocument}.Arguments" /> property.
         /// </summary>
         /// <param name="xml">The XML string to be transformed</param>
         /// <returns>The transformed XML string</returns>
@@ -78,7 +78,7 @@ namespace DocumentFormat.OpenXml.Transforms
             if (xml == null)
                 return null;
             if (Xslt == null)
-                throw new OpenXmlTransformException("Xslt is not initialized");
+                throw new OpenXmlTransformationException("Xslt is not initialized");
 
             var sb = new StringBuilder();
 

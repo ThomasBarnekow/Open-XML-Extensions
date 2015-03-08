@@ -53,16 +53,21 @@
     <Compile Include="Extensions\ParagraphExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Extensions\ListExtensions.cs" />
-    <Compile Include="Transforms\OpenXmlTransforms.cs" />
-    <Compile Include="Transforms\TransformTools.cs" />
-    <Compile Include="Transforms\XmlTransforms.cs" />
-    <Compile Include="Transforms\XslOpenXmlTransform.cs" />
+    <Compile Include="Transformation\OpenXmlTransformationException.cs" />
+    <Compile Include="Transformation\OpenXmlTransformations.cs" />
+    <Compile Include="Transformation\TransformationTools.cs" />
+    <Compile Include="Transformation\WordprocessingDocumentTransformation.cs" />
+    <Compile Include="Transformation\XmlTransformations.cs" />
+    <Compile Include="Transformation\XslOpenXmlTransformation.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Open-XML-SDK\Open-XML-SDK.csproj">
       <Project>{55FB0A8A-B816-4DC9-9BB4-4DB5B5950F5A}</Project>
       <Name>Open-XML-SDK</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Transforms\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

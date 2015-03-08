@@ -1,7 +1,7 @@
-﻿/*
- * OpenXmlTransforms.cs - Transforms for Open XML Documents
+/*
+ * WordprocessingDocumentTransformation.cs - Transformations for WordprocessingDocuments
  * 
- * Copyright 2014 Thomas Barnekow
+ * Copyright 2014-2015 Thomas Barnekow
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,287 +24,23 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Xml.Linq;
-using DocumentFormat.OpenXml.Extensions;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 
-namespace DocumentFormat.OpenXml.Transforms
+namespace DocumentFormat.OpenXml.Transformation
 {
-    /// <summary>
-    /// The class represents errors that occur during transforms.
-    /// </summary>
-    public class OpenXmlTransformException : Exception
-    {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="OpenXmlTransformException" /> class.
-        /// </summary>
-        public OpenXmlTransformException()
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="OpenXmlTransformException" /> class
-        /// with a specified error message.
-        /// </summary>
-        /// <param name="message">The error message.</param>
-        public OpenXmlTransformException(string message)
-            : base(message)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="OpenXmlTransformException" /> class
-        /// with a specified error message and a reference to the inner exception that is
-        /// the cause of this exception.
-        /// </summary>
-        /// <param name="message">The error message.</param>
-        /// <param name="innerException">The inner exception.</param>
-        public OpenXmlTransformException(string message, Exception innerException)
-            : base(message, innerException)
-        {
-        }
-    }
-
-    /// <summary>
-    /// This class is the abstract base class of all Open XML transforms.
-    /// </summary>
-    /// <typeparam name="TDocument">A subclass of <see cref="OpenXmlPackage" />.</typeparam>
-    public abstract class OpenXmlTransform<TDocument> : ICloneable
-        where TDocument : OpenXmlPackage
-    {
-        /// <summary>
-        /// Creates a deep copy of the transform.
-        /// </summary>
-        /// <returns></returns>
-        public virtual object Clone()
-        {
-            return MemberwiseClone();
-        }
-
-        /// <summary>
-        /// Transforms a Flat OPC string.
-        /// </summary>
-        /// <param name="text">The Flat OPC string to be transformed.</param>
-        /// <returns>The transformed Flat OPC string.</returns>
-        public virtual string Transform(string text)
-        {
-            return text;
-        }
-
-        /// <summary>
-        /// Transforms a Flat OPC <see cref="XDocument" />.
-        /// </summary>
-        /// <param name="document">The Flat OPC <see cref="XDocument" /> to be transformed.</param>
-        /// <returns>The transformed Flat OPC <see cref="XDocument" />.</returns>
-        public virtual XDocument Transform(XDocument document)
-        {
-            return document;
-        }
-
-        /// <summary>
-        /// Transforms an instance of a subclass of <see cref="OpenXmlPackage" />.
-        /// </summary>
-        /// <remarks>
-        /// This method, if overridden by a subclass, must clone the original document
-        /// and return a transformed clone. The actual transform should be implemented
-        /// by overriding the <see cref="OpenXmlTransform{DocumentType}.TransformInPlace" /> method
-        /// which is called by the default implementation in this class.
-        /// </remarks>
-        /// <param name="packageDocument">The document to be transformed.</param>
-        /// <returns>The cloned and transformed document.</returns>
-        public virtual TDocument Transform(TDocument packageDocument)
-        {
-            return packageDocument == null ? null : TransformInPlace((TDocument) packageDocument.Clone());
-        }
-
-        /// <summary>
-        /// Transforms an instance of a subclass of <see cref="OpenXmlPackage" /> in-place.
-        /// </summary>
-        /// <remarks>
-        /// This method, if overridden by a subclass, must transform the original document
-        /// in-place rather than transforming a clone. Otherwise, if called directly, it
-        /// will not have the desired effect.
-        /// </remarks>
-        /// <param name="packageDocument">The document to be transformed.</param>
-        /// <returns>The document (transformed in-place).</returns>
-        public virtual TDocument TransformInPlace(TDocument packageDocument)
-        {
-            return packageDocument;
-        }
-    }
-
-    /// <summary>
-    /// This class should be subclassed by concrete transforms that perform their specific
-    /// transformation task on a Flat OPC string.
-    /// </summary>
-    /// <remarks>
-    /// Subclasses must override <see cref="OpenXmlTransform{DocumentType}.Transform(string)" />.
-    /// The other methods will delegate the actual transformation to this method.
-    /// </remarks>
-    /// <typeparam name="TDocument">A subclass of <see cref="OpenXmlPackage" />.</typeparam>
-    public abstract class FlatOpcStringTransform<TDocument> : OpenXmlTransform<TDocument>
-        where TDocument : OpenXmlPackage
-    {
-        /// <summary>
-        /// Transforms a Flat OPC <see cref="XDocument" />.
-        /// </summary>
-        /// <param name="document">The Flat OPC <see cref="XDocument" /> to be transformed.</param>
-        /// <returns>The transformed Flat OPC <see cref="XDocument" />.</returns>
-        public override sealed XDocument Transform(XDocument document)
-        {
-            if (document == null)
-                return null;
-
-            var result = Transform(document.ToString());
-            return XDocument.Parse(result);
-        }
-
-        /// <summary>
-        /// Transforms an instance of a subclass of <see cref="OpenXmlPackage" />.
-        /// </summary>
-        /// <param name="packageDocument">The document to be transformed.</param>
-        /// <returns>The cloned and transformed document.</returns>
-        public override sealed TDocument Transform(TDocument packageDocument)
-        {
-            if (packageDocument == null)
-                return null;
-
-            var result = Transform(packageDocument.ToFlatOpcString());
-            return TransformTools.FromFlatOpcString<TDocument>(result);
-        }
-
-        /// <summary>
-        /// Transforms an instance of a subclass of <see cref="OpenXmlPackage" /> in-place.
-        /// </summary>
-        /// <param name="packageDocument">The document to be transformed.</param>
-        /// <returns>The document (transformed in-place).</returns>
-        public override sealed TDocument TransformInPlace(TDocument packageDocument)
-        {
-            if (packageDocument == null)
-                throw new ArgumentNullException("packageDocument");
-
-            return (TDocument) packageDocument.ReplaceWith(Transform(packageDocument));
-        }
-    }
-
-    /// <summary>
-    /// This class should be subclassed by concrete transforms that perform their specific
-    /// transformation task on a Flat OPC <see cref="XDocument" />.
-    /// </summary>
-    /// <remarks>
-    /// Subclasses must override <see cref="OpenXmlTransform{DocumentType}.Transform(XDocument)" />.
-    /// The other methods will delegate the actual transformation to this method.
-    /// </remarks>
-    /// <typeparam name="TDocument">A subclass of <see cref="OpenXmlPackage" />.</typeparam>
-    public abstract class FlatOpcDocumentTransform<TDocument> : OpenXmlTransform<TDocument>
-        where TDocument : OpenXmlPackage
-    {
-        /// <summary>
-        /// Transforms a Flat OPC string.
-        /// </summary>
-        /// <param name="text">The Flat OPC string to be transformed.</param>
-        /// <returns>The transformed Flat OPC string.</returns>
-        public override sealed string Transform(string text)
-        {
-            if (text == null)
-                return null;
-
-            var result = Transform(XDocument.Parse(text));
-            return result.ToString();
-        }
-
-        /// <summary>
-        /// Transforms an instance of a subclass of <see cref="OpenXmlPackage" />.
-        /// </summary>
-        /// <param name="packageDocument">The document to be transformed.</param>
-        /// <returns>The cloned and transformed document.</returns>
-        public override sealed TDocument Transform(TDocument packageDocument)
-        {
-            if (packageDocument == null)
-                return null;
-
-            var result = Transform(packageDocument.ToFlatOpcDocument());
-            return TransformTools.FromFlatOpcDocument<TDocument>(result);
-        }
-
-        /// <summary>
-        /// Transforms an instance of a subclass of <see cref="OpenXmlPackage" /> in-place.
-        /// </summary>
-        /// <param name="packageDocument">The document to be transformed.</param>
-        /// <returns>The document (transformed in-place).</returns>
-        public override sealed TDocument TransformInPlace(TDocument packageDocument)
-        {
-            if (packageDocument == null)
-                throw new ArgumentNullException("packageDocument");
-
-            return (TDocument) packageDocument.ReplaceWith(Transform(packageDocument));
-        }
-    }
-
-    /// <summary>
-    /// This class should be subclassed by concrete transforms that perform their specific
-    /// transformation task on instances of <see cref="OpenXmlPackage" /> or, more specifically,
-    /// instances of its subclasses.
-    /// </summary>
-    /// <remarks>
-    /// Subclasses must override <see cref="OpenXmlTransform{DocumentType}.TransformInPlace" />.
-    /// The other methods will delegate the actual transformation to this method.
-    /// </remarks>
-    public abstract class OpenXmlPackageTransform<TDocument> : OpenXmlTransform<TDocument>
-        where TDocument : OpenXmlPackage
-    {
-        /// <summary>
-        /// Transforms a Flat OPC string.
-        /// </summary>
-        /// <param name="text">The Flat OPC string to be transformed.</param>
-        /// <returns>The transformed Flat OPC string.</returns>
-        public override sealed string Transform(string text)
-        {
-            if (text == null)
-                return null;
-
-            using (var packageDocument = TransformTools.FromFlatOpcString<TDocument>(text))
-                return TransformInPlace(packageDocument).ToFlatOpcString();
-        }
-
-        /// <summary>
-        /// Transforms a Flat OPC <see cref="XDocument" />.
-        /// </summary>
-        /// <param name="document">The Flat OPC <see cref="XDocument" /> to be transformed.</param>
-        /// <returns>The transformed Flat OPC <see cref="XDocument" />.</returns>
-        public override sealed XDocument Transform(XDocument document)
-        {
-            if (document == null)
-                return null;
-
-            using (var packageDocument = TransformTools.FromFlatOpcDocument<TDocument>(document))
-                return TransformInPlace(packageDocument).ToFlatOpcDocument();
-        }
-
-        /// <summary>
-        /// Transforms an Open XML package document.
-        /// </summary>
-        /// <param name="packageDocument">The document to be transformed.</param>
-        /// <returns>The cloned and transformed document.</returns>
-        public override sealed TDocument Transform(TDocument packageDocument)
-        {
-            return packageDocument == null ? null : TransformInPlace((TDocument) packageDocument.Clone());
-        }
-    }
-
     /// <summary>
     /// This class should be subclassed by concrete transforms that perform their specific
     /// transformation task on instances of <see cref="WordprocessingDocument" />.
     /// </summary>
     /// <remarks>
-    /// Subclasses must override <see cref="OpenXmlTransform{DocumentType}.TransformInPlace" />.
+    /// Subclasses must override <see cref="OpenXmlTransformation{TDocument}.TransformInPlace" />.
     /// The other methods will delegate the actual transformation to this method.
     /// Currently, this class contains specific methods for transforming <see cref="Document" />,
     /// <see cref="Styles" />, and <see cref="Numbering" />. More methods can and will be added
     /// as the need arises.
     /// </remarks>
-    public abstract class WordprocessingDocumentTransform : OpenXmlPackageTransform<WordprocessingDocument>
+    public abstract class WordprocessingDocumentTransformation : OpenXmlPackageTransformation<WordprocessingDocument>
     {
         private WordprocessingDocument _template;
 
@@ -401,14 +137,14 @@ namespace DocumentFormat.OpenXml.Transforms
         /// the given <see cref="WordprocessingDocument" /> with a transformed instance of
         /// the <see cref="Document" /> class, calling the
         /// <see cref="TransformDocument(OpenXmlElement, WordprocessingDocument)" />
-        /// method to perform the actual transform.
+        /// method to perform the actual transformation.
         /// Adds a <see cref="MainDocumentPart" /> in case it does not exist, calling the
         /// <see cref="CreateDocument(WordprocessingDocument)" />
         /// method to produce the new <see cref="Document" /> element.
         /// </summary>
         /// <remarks>
         /// This method is meant to be called from overrides of the
-        /// <see cref="OpenXmlTransform{WordprocessingDocument}.TransformInPlace" />
+        /// <see cref="OpenXmlTransformation{TDocument}.TransformInPlace" />
         /// method.
         /// </remarks>
         /// <param name="packageDocument">The <see cref="WordprocessingDocument" /> to be transformed in-place.</param>
@@ -471,7 +207,7 @@ namespace DocumentFormat.OpenXml.Transforms
         /// in the given <see cref="WordprocessingDocument" /> with a transformed instance
         /// of the <see cref="Styles" /> class, calling the
         /// <see cref="TransformStyles(OpenXmlElement, WordprocessingDocument)" />
-        /// method to perform the actual transform.
+        /// method to perform the actual transformation.
         /// Adds a <see cref="StyleDefinitionsPart" /> in case it does not exist, calling the
         /// <see cref="CreateStyles(WordprocessingDocument)" />
         /// method to produce the new <see cref="Styles" /> element.
@@ -483,7 +219,7 @@ namespace DocumentFormat.OpenXml.Transforms
         /// </summary>
         /// <remarks>
         /// This method is meant to be called from overrides of the
-        /// <see cref="OpenXmlTransform{WordprocessingDocument}.TransformInPlace" />
+        /// <see cref="OpenXmlTransformation{TDocument}.TransformInPlace" />
         /// method.
         /// </remarks>
         /// <param name="packageDocument">The <see cref="WordprocessingDocument" /> to be transformed in-place.</param>
@@ -513,7 +249,7 @@ namespace DocumentFormat.OpenXml.Transforms
             else
             {
                 // The WordprocessingDocument does not have a StyleDefinitionsPart.
-                // If the transform produces a non-null root element, we add a new
+                // If the transformation produces a non-null root element, we add a new
                 // StyleDefinitionsPart with that root element.
                 var styles = CreateStyles(packageDocument);
                 if (styles != null)
@@ -582,7 +318,7 @@ namespace DocumentFormat.OpenXml.Transforms
         /// in the given <see cref="WordprocessingDocument" /> with a transformed instance
         /// of the <see cref="Numbering" /> class, calling the
         /// <see cref="TransformNumbering(OpenXmlElement, WordprocessingDocument)" />
-        /// method to perform the actual transform.
+        /// method to perform the actual transformation.
         /// Adds a <see cref="NumberingDefinitionsPart" /> in case it does not exist, calling the
         /// <see cref="CreateNumbering(WordprocessingDocument)" />
         /// method to produce the new <see cref="Numbering" /> element.
@@ -591,7 +327,7 @@ namespace DocumentFormat.OpenXml.Transforms
         /// </summary>
         /// <remarks>
         /// This method is meant to be called from overrides of the
-        /// <see cref="OpenXmlTransform{WordprocessingDocument}.TransformInPlace" />
+        /// <see cref="OpenXmlTransformation{TDocument}.TransformInPlace" />
         /// method.
         /// </remarks>
         /// <param name="packageDocument">The <see cref="WordprocessingDocument" /> to be transformed in-place.</param>
@@ -718,16 +454,16 @@ namespace DocumentFormat.OpenXml.Transforms
         #region ICloneable Methods
 
         /// <summary>
-        /// Creates a deep copy of the transform.
+        /// Creates a deep copy of the transformation.
         /// </summary>
         /// <returns>The clone.</returns>
         public override object Clone()
         {
-            var transform = (WordprocessingDocumentTransform)base.Clone();
+            var transformation = (WordprocessingDocumentTransformation)base.Clone();
             if (Template != null)
-                transform.Template = (WordprocessingDocument)Template.Clone();
+                transformation.Template = (WordprocessingDocument)Template.Clone();
 
-            return transform;
+            return transformation;
         }
 
         #endregion

@@ -29,7 +29,7 @@ using System.Text;
 using System.Xml.Linq;
 using DocumentFormat.OpenXml.CustomXmlDataProperties;
 using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Transforms;
+using DocumentFormat.OpenXml.Transformation;
 using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace DocumentFormat.OpenXml.Extensions

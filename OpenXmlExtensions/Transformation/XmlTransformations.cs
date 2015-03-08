@@ -1,5 +1,5 @@
 ﻿/*
- * XmlTransforms.cs - Transforms for XML and Open XML documents
+ * XmlTransformations.cs - Transformations for XML and Open XML documents
  * 
  * Copyright 2014 Thomas Barnekow
  *
@@ -24,16 +24,16 @@
 using System.Xml.Linq;
 using DocumentFormat.OpenXml.Packaging;
 
-namespace DocumentFormat.OpenXml.Transforms
+namespace DocumentFormat.OpenXml.Transformation
 {
-    #region XML to Open XML transforms
+    #region XML to Open XML transformations
 
     /// <summary>
-    /// This interface defines methods implemented by transforms from generic XML to
+    /// This interface defines methods implemented by transformations from generic XML to
     /// Open XML documents.
     /// </summary>
     /// <typeparam name="TDocument">A subclass of <see cref="OpenXmlPackage" />.</typeparam>
-    public interface IXmlToOpenXmlTransform<out TDocument>
+    public interface IXmlToOpenXmlTransformation<out TDocument>
         where TDocument : OpenXmlPackage
     {
         /// <summary>
@@ -52,11 +52,11 @@ namespace DocumentFormat.OpenXml.Transforms
     }
 
     /// <summary>
-    /// This class is the abstract base class for transforms from generic XML to Open XML
-    /// documents that perform their transform based on an XML <see cref="string" />.
+    /// This class is the abstract base class for transformations from generic XML to Open XML
+    /// documents that perform their transformation based on an XML <see cref="string" />.
     /// </summary>
     /// <typeparam name="TDocument">A subclass of <see cref="OpenXmlPackage" />.</typeparam>
-    public abstract class XmlStringToOpenXmlTransform<TDocument> : IXmlToOpenXmlTransform<TDocument>
+    public abstract class XmlStringToOpenXmlTransformation<TDocument> : IXmlToOpenXmlTransformation<TDocument>
         where TDocument : OpenXmlPackage
     {
         public abstract TDocument ToOpenXml(string text);
@@ -68,11 +68,11 @@ namespace DocumentFormat.OpenXml.Transforms
     }
 
     /// <summary>
-    /// This class is the abstract base class for transforms from generic XML to Open XML
-    /// documents that perform their transform based on an <see cref="XDocument" />.
+    /// This class is the abstract base class for transformations from generic XML to Open XML
+    /// documents that perform their transformation based on an <see cref="XDocument" />.
     /// </summary>
     /// <typeparam name="TDocument">A subclass of <see cref="OpenXmlPackage" />.</typeparam>
-    public abstract class XDocumentToOpenXmlTransform<TDocument> : IXmlToOpenXmlTransform<TDocument>
+    public abstract class XDocumentToOpenXmlTransformation<TDocument> : IXmlToOpenXmlTransformation<TDocument>
         where TDocument : OpenXmlPackage
     {
         public TDocument ToOpenXml(string text)
@@ -85,11 +85,11 @@ namespace DocumentFormat.OpenXml.Transforms
 
     #endregion
 
-    #region Open XML to XML transforms
+    #region Open XML to XML transformations
 
     /// <summary>
-    /// This interface defines methods implemented by transforms from Open XML to generic
-    /// XML documents. All methods will perform the exact same transform and only take
+    /// This interface defines methods implemented by transformations from Open XML to generic
+    /// XML documents. All methods will perform the exact same transformation and only take
     /// the input in different formats.
     /// </summary>
     /// <seealso cref="FlatOpcStringToXmlTransform{DocumentType}" />
@@ -105,8 +105,8 @@ namespace DocumentFormat.OpenXml.Transforms
     }
 
     /// <summary>
-    /// This class is the abstract base class for transforms from Open XML to generic
-    /// XML documents that perform their transform on the Flat OPC <see cref="string" />
+    /// This class is the abstract base class for transformations from Open XML to generic
+    /// XML documents that perform their transformation on the Flat OPC <see cref="string" />
     /// representation of an Open XML package.
     /// </summary>
     /// <typeparam name="TDocument">A subclass of <see cref="OpenXmlPackage" />.</typeparam>
@@ -127,8 +127,8 @@ namespace DocumentFormat.OpenXml.Transforms
     }
 
     /// <summary>
-    /// This class is the abstract base class for transforms from Open XML to generic
-    /// XML documents that perform their transform on the Flat OPC <see cref="XDocument" />
+    /// This class is the abstract base class for transformations from Open XML to generic
+    /// XML documents that perform their transformation on the Flat OPC <see cref="XDocument" />
     /// representation of an Open XML package, using the Linq to XML classes.
     /// </summary>
     /// <typeparam name="TDocument">A subclass of <see cref="OpenXmlPackage" />.</typeparam>
@@ -149,8 +149,8 @@ namespace DocumentFormat.OpenXml.Transforms
     }
 
     /// <summary>
-    /// This class is the abstract base class for transforms from Open XML to generic
-    /// XML documents that perform their transform on one of the subclasses of
+    /// This class is the abstract base class for transformations from Open XML to generic
+    /// XML documents that perform their transformation on one of the subclasses of
     /// <see cref="OpenXmlPackage" />, using the Open XML SDK.
     /// </summary>
     /// <typeparam name="TDocument">A subclass of <see cref="OpenXmlPackage" />.</typeparam>
@@ -159,12 +159,12 @@ namespace DocumentFormat.OpenXml.Transforms
     {
         public XDocument ToXml(string text)
         {
-            return text == null ? null : ToXml(TransformTools.FromFlatOpcString<TDocument>(text));
+            return text == null ? null : ToXml(TransformationTools.FromFlatOpcString<TDocument>(text));
         }
 
         public XDocument ToXml(XDocument document)
         {
-            return document == null ? null : ToXml(TransformTools.FromFlatOpcDocument<TDocument>(document));
+            return document == null ? null : ToXml(TransformationTools.FromFlatOpcDocument<TDocument>(document));
         }
 
         public abstract XDocument ToXml(TDocument packageDocument);
