@@ -22,6 +22,7 @@
  */
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
@@ -30,6 +31,7 @@ namespace DocumentFormat.OpenXml.Extensions
 {
     /// <summary>
     /// </summary>
+    [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
     public static class ParagraphExtensions
     {
         public static readonly string DefaultParagraphStyleId = "Normal";
@@ -42,10 +44,7 @@ namespace DocumentFormat.OpenXml.Extensions
                 throw new ArgumentNullException("document");
 
             var styleId = paragraph.GetCharacterStyleId();
-            if (styleId != null)
-                return document.GetCharacterStyle(styleId);
-
-            return null;
+            return styleId != null ? document.GetCharacterStyle(styleId) : null;
         }
 
         public static Style GetCharacterStyle(this ParagraphProperties pPr, WordprocessingDocument document)
@@ -54,18 +53,12 @@ namespace DocumentFormat.OpenXml.Extensions
                 throw new ArgumentNullException("document");
 
             var styleId = pPr.GetCharacterStyleId();
-            if (styleId != null)
-                return document.GetCharacterStyle(styleId);
-
-            return null;
+            return styleId != null ? document.GetCharacterStyle(styleId) : null;
         }
 
         public static string GetCharacterStyleId(this Paragraph paragraph)
         {
-            if (paragraph.ParagraphProperties != null)
-                return paragraph.ParagraphProperties.GetCharacterStyleId();
-
-            return DefaultCharacterStyleId;
+            return paragraph.ParagraphProperties != null ? paragraph.ParagraphProperties.GetCharacterStyleId() : DefaultCharacterStyleId;
         }
 
         public static string GetCharacterStyleId(this ParagraphProperties pPr)
@@ -176,6 +169,7 @@ namespace DocumentFormat.OpenXml.Extensions
             if (style != null && style.StyleParagraphProperties != null &&
                 style.StyleParagraphProperties.OutlineLevel != null)
                 return style.StyleParagraphProperties.OutlineLevel.Val + 1;
+
             return BodyTextOutlineLevel;
         }
 
