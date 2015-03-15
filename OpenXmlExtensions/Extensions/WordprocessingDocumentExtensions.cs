@@ -459,6 +459,22 @@ namespace DocumentFormat.OpenXml.Extensions
             return part.Numbering;
         }
 
+        public static Settings ProduceSettingsElement(this WordprocessingDocument document)
+        {
+            if (document == null)
+                throw new ArgumentNullException("document");
+
+            var part = document.MainDocumentPart.DocumentSettingsPart ??
+                       document.MainDocumentPart.AddNewPart<DocumentSettingsPart>();
+
+            if (part.Settings != null)
+                return part.Settings;
+
+            part.Settings = new Settings();
+            part.Settings.Save();
+            return part.Settings;
+        }
+
         /// <summary>
         /// Gets or creates the root element of the document's style definitions part.
         /// </summary>
