@@ -32,12 +32,9 @@ namespace DocumentFormat.OpenXml.Extensions
     /// <summary>
     /// </summary>
     [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
+    [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public static class ParagraphExtensions
     {
-        public static readonly string DefaultParagraphStyleId = "Normal";
-        public static readonly string DefaultCharacterStyleId = "DefaultParagraphFont";
-        public static readonly int BodyTextOutlineLevel = 10;
-
         public static Style GetCharacterStyle(this Paragraph paragraph, WordprocessingDocument document)
         {
             if (document == null)
@@ -47,80 +44,11 @@ namespace DocumentFormat.OpenXml.Extensions
             return styleId != null ? document.GetCharacterStyle(styleId) : null;
         }
 
-        public static Style GetCharacterStyle(this ParagraphProperties pPr, WordprocessingDocument document)
-        {
-            if (document == null)
-                throw new ArgumentNullException("document");
-
-            var styleId = pPr.GetCharacterStyleId();
-            return styleId != null ? document.GetCharacterStyle(styleId) : null;
-        }
-
         public static string GetCharacterStyleId(this Paragraph paragraph)
         {
-            return paragraph.ParagraphProperties != null ? paragraph.ParagraphProperties.GetCharacterStyleId() : DefaultCharacterStyleId;
-        }
-
-        public static string GetCharacterStyleId(this ParagraphProperties pPr)
-        {
-            if (pPr.ParagraphMarkRunProperties != null)
-            {
-                var rStyle = pPr.ParagraphMarkRunProperties.GetFirstChild<RunStyle>();
-                if (rStyle != null && rStyle.Val != null)
-                    return rStyle.Val.Value;
-            }
-            return DefaultCharacterStyleId;
-        }
-
-        public static T GetLeafElement<T>(this Style style)
-            where T : OpenXmlLeafElement
-        {
-            var leaf = style.Descendants<T>().FirstOrDefault();
-            if (leaf != null)
-                return leaf;
-
-            if (style.BasedOn != null)
-            {
-                var baseStyle = style.Parent.Elements<Style>()
-                    .FirstOrDefault(e => e.StyleId.Value == style.BasedOn.Val.Value);
-                if (baseStyle != null)
-                    return baseStyle.GetLeafElement<T>();
-            }
-
-            return null;
-        }
-
-        public static T GetLeafElement<T>(this ParagraphProperties pPr, WordprocessingDocument document)
-            where T : OpenXmlLeafElement
-        {
-            // See whether the paragraph properties have this leaf element.
-            var leaf = pPr.Descendants<T>().FirstOrDefault();
-            if (leaf != null)
-                return leaf;
-
-            // Don't look further if no document was given.
-            if (document == null)
-                return null;
-
-            // See whether the paragraph style has it.
-            var style = pPr.GetParagraphStyle(document);
-            if (style != null)
-            {
-                leaf = style.GetLeafElement<T>();
-                if (leaf != null)
-                    return leaf;
-            }
-
-            // See whether a potential character style has it.
-            var rStyle = pPr.GetCharacterStyle(document);
-            if (rStyle != null)
-            {
-                leaf = rStyle.Descendants<T>().FirstOrDefault();
-                return leaf;
-            }
-
-            // There is no such leaf.
-            return null;
+            return paragraph.ParagraphProperties != null
+                ? paragraph.ParagraphProperties.GetCharacterStyleId()
+                : StyleExtensions.DefaultCharacterStyleId;
         }
 
         public static int GetListLevel(this Paragraph paragraph, WordprocessingDocument document)
@@ -170,7 +98,7 @@ namespace DocumentFormat.OpenXml.Extensions
                 style.StyleParagraphProperties.OutlineLevel != null)
                 return style.StyleParagraphProperties.OutlineLevel.Val + 1;
 
-            return BodyTextOutlineLevel;
+            return StyleExtensions.BodyTextOutlineLevel;
         }
 
         public static Style GetParagraphStyle(this Paragraph paragraph, WordprocessingDocument document)
@@ -181,28 +109,12 @@ namespace DocumentFormat.OpenXml.Extensions
             return document.GetParagraphStyle(paragraph.GetParagraphStyleId());
         }
 
-        public static Style GetParagraphStyle(this ParagraphProperties pPr, WordprocessingDocument document)
-        {
-            if (document == null)
-                throw new ArgumentNullException("document");
-
-            return document.GetParagraphStyle(pPr.GetParagraphStyleId());
-        }
-
         public static string GetParagraphStyleId(this Paragraph paragraph)
         {
             if (paragraph.ParagraphProperties != null)
                 return paragraph.ParagraphProperties.GetParagraphStyleId();
 
-            return DefaultParagraphStyleId;
-        }
-
-        public static string GetParagraphStyleId(this ParagraphProperties pPr)
-        {
-            if (pPr.ParagraphStyleId != null && pPr.ParagraphStyleId.Val != null)
-                return pPr.ParagraphStyleId.Val.Value;
-
-            return DefaultParagraphStyleId;
+            return StyleExtensions.DefaultParagraphStyleId;
         }
 
         public static T GetPropertiesLeafElement<T>(this Paragraph paragraph, WordprocessingDocument document)
@@ -257,12 +169,6 @@ namespace DocumentFormat.OpenXml.Extensions
         public static bool IsKeepNext(this Paragraph paragraph, WordprocessingDocument document)
         {
             var keepNext = paragraph.GetPropertiesLeafElement<KeepNext>(document);
-            return keepNext != null && (keepNext.Val == null || keepNext.Val.Value);
-        }
-
-        public static bool IsKeepNext(this ParagraphProperties pPr, WordprocessingDocument document)
-        {
-            var keepNext = pPr.GetLeafElement<KeepNext>(document);
             return keepNext != null && (keepNext.Val == null || keepNext.Val.Value);
         }
 

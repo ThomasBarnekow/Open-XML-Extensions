@@ -49,6 +49,8 @@
     <Compile Include="Extensions\OpenXmlPackageExtensions.cs" />
     <Compile Include="Extensions\OpenXmlElementExtensions.cs" />
     <Compile Include="Extensions\OpenXmlPartExtensions.cs" />
+    <Compile Include="Extensions\ParagraphPropertiesExtensions.cs" />
+    <Compile Include="Extensions\StyleExtensions.cs" />
     <Compile Include="Extensions\WordprocessingDocumentExtensions.cs" />
     <Compile Include="Extensions\ParagraphExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
