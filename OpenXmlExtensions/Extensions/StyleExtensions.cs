@@ -35,6 +35,8 @@ namespace DocumentFormat.OpenXml.Extensions
         public static T GetLeafElement<T>(this Style style)
             where T : OpenXmlLeafElement
         {
+            if (style == null) return null;
+
             var leaf = style.Descendants<T>().FirstOrDefault();
             if (leaf != null) return leaf;
 
@@ -46,19 +48,23 @@ namespace DocumentFormat.OpenXml.Extensions
             return baseStyle != null ? baseStyle.GetLeafElement<T>() : null;
         }
 
-        public static bool IsBold(this Style style)
+        public static OnOffValue GetOnOffValue<T>(this Style style) 
+            where T : OnOffType
         {
-            var b = style.GetLeafElement<Bold>();
-            return b != null && (b.Val == null || b.Val.Value);
+            var onOffElement = style.GetLeafElement<T>();
+            if (onOffElement == null) return null;
+
+            return onOffElement.Val ?? new OnOffValue(true);
         }
 
-        public static bool IsItalic(this Style style)
+        public static bool Is<T>(this Style style)
+            where T : OnOffType
         {
-            var i = style.GetLeafElement<Italic>();
-            return i != null && (i.Val == null || i.Val.Value);
+            var onOffValue = style.GetOnOffValue<T>();
+            return onOffValue != null && onOffValue.Value;
         }
 
-        public static bool IsUnderline(this Style style)
+        public static bool IsUnderlineSingle(this Style style)
         {
             var u = style.GetLeafElement<Underline>();
             return u != null && u.Val != null && u.Val.Value == UnderlineValues.Single;

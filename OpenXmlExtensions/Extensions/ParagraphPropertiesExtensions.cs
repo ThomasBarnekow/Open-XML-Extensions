@@ -55,34 +55,25 @@ namespace DocumentFormat.OpenXml.Extensions
         public static T GetLeafElement<T>(this ParagraphProperties pPr, WordprocessingDocument document)
             where T : OpenXmlLeafElement
         {
-            // See whether the paragraph properties have this leaf element.
-            var leaf = pPr.Descendants<T>().FirstOrDefault();
-            if (leaf != null)
-                return leaf;
-
-            // Don't look further if no document was given.
             if (document == null)
-                return null;
+                throw new ArgumentNullException("document");
 
-            // See whether the paragraph style has it.
+            var leaf = pPr.Descendants<T>().FirstOrDefault();
+            if (leaf != null) return leaf;
+
             var style = pPr.GetParagraphStyle(document);
-            if (style != null)
-            {
-                leaf = style.GetLeafElement<T>();
-                if (leaf != null)
-                    return leaf;
-            }
+            return style != null ? style.GetLeafElement<T>() : null;
+        }
 
-            // See whether a potential character style has it.
-            var rStyle = pPr.GetCharacterStyle(document);
-            if (rStyle != null)
-            {
-                leaf = rStyle.Descendants<T>().FirstOrDefault();
-                return leaf;
-            }
+        public static OnOffValue GetOnOffValue<T>(this ParagraphProperties pPr, WordprocessingDocument document)
+            where T : OnOffType
+        {
+            var element = pPr.Descendants<T>().FirstOrDefault();
+            if (element != null)
+                return element.Val.HasValue ? element.Val : new OnOffValue(true);
 
-            // There is no such leaf.
-            return null;
+            var style = pPr.GetParagraphStyle(document);
+            return style != null ? style.GetOnOffValue<T>() : null;
         }
 
         public static Style GetParagraphStyle(this ParagraphProperties pPr, WordprocessingDocument document)
@@ -95,16 +86,18 @@ namespace DocumentFormat.OpenXml.Extensions
 
         public static string GetParagraphStyleId(this ParagraphProperties pPr)
         {
-            if (pPr.ParagraphStyleId != null && pPr.ParagraphStyleId.Val != null)
-                return pPr.ParagraphStyleId.Val.Value;
+            if (pPr == null || pPr.ParagraphStyleId == null)
+                return StyleExtensions.DefaultParagraphStyleId;
 
-            return StyleExtensions.DefaultParagraphStyleId;
+            return pPr.ParagraphStyleId.Val.Value;
         }
 
         public static bool IsKeepNext(this ParagraphProperties pPr, WordprocessingDocument document)
         {
-            var keepNext = pPr.GetLeafElement<KeepNext>(document);
-            return keepNext != null && (keepNext.Val == null || keepNext.Val.Value);
+            if (pPr == null) return false;
+
+            var val = pPr.GetOnOffValue<KeepNext>(document);
+            return val != null && val.Value;
         }
     }
 }

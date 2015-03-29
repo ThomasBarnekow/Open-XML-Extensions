@@ -50,6 +50,8 @@
     <Compile Include="Extensions\OpenXmlElementExtensions.cs" />
     <Compile Include="Extensions\OpenXmlPartExtensions.cs" />
     <Compile Include="Extensions\ParagraphPropertiesExtensions.cs" />
+    <Compile Include="Extensions\RunExtensions.cs" />
+    <Compile Include="Extensions\RunPropertiesExtensions.cs" />
     <Compile Include="Extensions\StyleExtensions.cs" />
     <Compile Include="Extensions\WordprocessingDocumentExtensions.cs" />
     <Compile Include="Extensions\ParagraphExtensions.cs" />

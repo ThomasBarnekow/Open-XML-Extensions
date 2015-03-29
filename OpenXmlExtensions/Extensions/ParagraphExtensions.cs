@@ -35,24 +35,10 @@ namespace DocumentFormat.OpenXml.Extensions
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public static class ParagraphExtensions
     {
-        public static Style GetCharacterStyle(this Paragraph paragraph, WordprocessingDocument document)
-        {
-            if (document == null)
-                throw new ArgumentNullException("document");
-
-            var styleId = paragraph.GetCharacterStyleId();
-            return styleId != null ? document.GetCharacterStyle(styleId) : null;
-        }
-
-        public static string GetCharacterStyleId(this Paragraph paragraph)
-        {
-            return paragraph.ParagraphProperties != null
-                ? paragraph.ParagraphProperties.GetCharacterStyleId()
-                : StyleExtensions.DefaultCharacterStyleId;
-        }
-
         public static int GetListLevel(this Paragraph paragraph, WordprocessingDocument document)
         {
+            if (paragraph == null)
+                throw new ArgumentNullException("paragraph");
             if (document == null)
                 throw new ArgumentNullException("document");
 
@@ -90,6 +76,8 @@ namespace DocumentFormat.OpenXml.Extensions
 
         public static int GetOutlineLevel(this Paragraph paragraph, WordprocessingDocument document)
         {
+            if (paragraph == null)
+                throw new ArgumentNullException("paragraph");
             if (document == null)
                 throw new ArgumentNullException("document");
 
@@ -103,6 +91,8 @@ namespace DocumentFormat.OpenXml.Extensions
 
         public static Style GetParagraphStyle(this Paragraph paragraph, WordprocessingDocument document)
         {
+            if (paragraph == null)
+                throw new ArgumentNullException("paragraph");
             if (document == null)
                 throw new ArgumentNullException("document");
 
@@ -111,71 +101,50 @@ namespace DocumentFormat.OpenXml.Extensions
 
         public static string GetParagraphStyleId(this Paragraph paragraph)
         {
-            if (paragraph.ParagraphProperties != null)
-                return paragraph.ParagraphProperties.GetParagraphStyleId();
+            if (paragraph == null)
+                throw new ArgumentNullException("paragraph");
 
-            return StyleExtensions.DefaultParagraphStyleId;
+            return paragraph.ParagraphProperties.GetParagraphStyleId();
         }
 
-        public static T GetPropertiesLeafElement<T>(this Paragraph paragraph, WordprocessingDocument document)
-            where T : OpenXmlLeafElement
+        public static bool Is<T>(this Paragraph paragraph, WordprocessingDocument document)
+            where T : OnOffType
         {
-            // See whether the paragraph properties have this leaf element.
-            var pPr = paragraph.ParagraphProperties;
-            if (pPr != null)
-            {
-                var leaf = pPr.Descendants<T>().FirstOrDefault();
-                if (leaf != null)
-                    return leaf;
-            }
+            if (paragraph == null)
+                throw new ArgumentNullException("paragraph");
 
-            // Don't look further if no document was given.
-            if (document == null)
-                return null;
-
-            // See whether the paragraph style has it.
             var style = paragraph.GetParagraphStyle(document);
-            if (style != null)
+            if (style.Is<Bold>())
             {
-                var leaf = style.GetLeafElement<T>();
-                if (leaf != null)
-                    return leaf;
+                var isAnyValueTurnedOff = paragraph.Descendants<Run>()
+                    .Select(r => r.GetOnOffValue<T>(document))
+                    .Any(val => val != null && val.Value == false);
+
+                return !isAnyValueTurnedOff;
             }
-
-            // See whether a potential character style has it.
-            var rStyle = paragraph.GetCharacterStyle(document);
-            if (rStyle != null)
-            {
-                var leaf = rStyle.Descendants<T>().FirstOrDefault();
-                return leaf;
-            }
-
-            // There is no such leaf.
-            return null;
-        }
-
-        public static bool IsBold(this Paragraph paragraph, WordprocessingDocument document)
-        {
-            var b = paragraph.GetPropertiesLeafElement<Bold>(document);
-            return b != null && (b.Val == null || b.Val.Value);
-        }
-
-        public static bool IsItalic(this Paragraph paragraph, WordprocessingDocument document)
-        {
-            var i = paragraph.GetPropertiesLeafElement<Italic>(document);
-            return i != null && (i.Val == null || i.Val.Value);
+            return paragraph.Descendants<Run>().All(r => r.Is<T>(document));
         }
 
         public static bool IsKeepNext(this Paragraph paragraph, WordprocessingDocument document)
         {
-            var keepNext = paragraph.GetPropertiesLeafElement<KeepNext>(document);
-            return keepNext != null && (keepNext.Val == null || keepNext.Val.Value);
+            return paragraph.ParagraphProperties.IsKeepNext(document);
         }
 
-        public static bool IsUnderline(this Paragraph paragraph, WordprocessingDocument document)
+        public static bool IsUnderlineSingle(this Paragraph paragraph, WordprocessingDocument document)
         {
-            var u = paragraph.GetPropertiesLeafElement<Underline>(document);
-            return u != null && u.Val != null && u.Val.Value == UnderlineValues.Single;
+            if (paragraph == null)
+                throw new ArgumentNullException("paragraph");
+
+            var style = paragraph.GetParagraphStyle(document);
+            if (style.IsUnderlineSingle())
+            {
+                var isUnderlineTurnedOff = paragraph.Descendants<Run>()
+                    .Select(r => r.GetLeafElement<Underline>(document))
+                    .Any(u => u.Val != null && u.Val.Value != UnderlineValues.Single);
+
+                return !isUnderlineTurnedOff;
+            }
+            return paragraph.Descendants<Run>().All(r => r.IsUnderlineSingle(document));
         }
 
         #region Trimming
