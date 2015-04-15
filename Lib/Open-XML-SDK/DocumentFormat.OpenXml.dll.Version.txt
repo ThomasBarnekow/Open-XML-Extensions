@@ -1,0 +1,46 @@
+﻿DocumentFormat.OpenXml.dll was built from commit 366f86f (vNext at the time)
+hosted at https://github.com/ThomasBarnekow/Open-XML-SDK.git.
+
+$ git log v2.5.1^..vNext
+
+commit 366f86fad2a14eae3e6d9abefe9bd390b13dbb74
+Author: ThomasBarnekow <thomas@barnekow.info>
+Date:   Sun Jan 18 20:56:16 2015 +0100
+
+    Removed SetAssemblyVersionString.ps1 and associated pre-build event
+
+commit 19e660b0353123e43289cbb6172f6bd6f8e477f3
+Author: ThomasBarnekow <thomas@barnekow.info>
+Date:   Sun Jan 18 16:18:34 2015 +0100
+
+    Added XName property to OpenXmlElement and OpenXmlAttribute
+
+commit f81a4107231a24704a12ba48764973bb74e3b03d
+Author: ThomasBarnekow <thomas@barnekow.info>
+Date:   Sun Jan 18 15:18:16 2015 +0100
+
+    Implemented CreateFromTemplate
+
+commit 618bce0378a399d3650a26c6c1c1607382760e7b
+Author: ThomasBarnekow <thomas@barnekow.info>
+Date:   Sun Jan 18 15:03:06 2015 +0100
+
+    Implemented Flat OPC conversion
+
+commit 39def2ae3714d122e2a7e35027a1945b94e91550
+Author: ThomasBarnekow <thomas@barnekow.info>
+Date:   Sun Jan 18 14:54:49 2015 +0100
+
+    Implemented Save and Clone functionality
+
+commit 6a3f7935dfbeb3ed7367717659b0e48c2817c0a3
+Author: Eric White <eric@ericwhite.com>
+Date:   Fri Jan 16 18:07:40 2015 +0530
+
+    Enable building content apps for PPTX
+
+commit 36112c350b065647852d6cbf52d09c7275088d8a
+Author: Eric White <eric@ericwhite.com>
+Date:   Fri Jan 16 13:07:45 2015 +0530
+
+    Add BOM to file - we want BOMs on every file for consistence

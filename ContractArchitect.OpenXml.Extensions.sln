@@ -1,8 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Open-XML-SDK", "..\Open-XML-SDK\Open-XML-SDK.csproj", "{55FB0A8A-B816-4DC9-9BB4-4DB5B5950F5A}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ContractArchitect.OpenXml.Extensions", "ContractArchitect.OpenXml.Extensions\ContractArchitect.OpenXml.Extensions.csproj", "{0FFBE211-D608-462A-9BA3-6EF51F801747}"
 EndProject
 Global
@@ -15,16 +13,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{55FB0A8A-B816-4DC9-9BB4-4DB5B5950F5A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{55FB0A8A-B816-4DC9-9BB4-4DB5B5950F5A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{55FB0A8A-B816-4DC9-9BB4-4DB5B5950F5A}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{55FB0A8A-B816-4DC9-9BB4-4DB5B5950F5A}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{55FB0A8A-B816-4DC9-9BB4-4DB5B5950F5A}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{55FB0A8A-B816-4DC9-9BB4-4DB5B5950F5A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{55FB0A8A-B816-4DC9-9BB4-4DB5B5950F5A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{55FB0A8A-B816-4DC9-9BB4-4DB5B5950F5A}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{55FB0A8A-B816-4DC9-9BB4-4DB5B5950F5A}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{55FB0A8A-B816-4DC9-9BB4-4DB5B5950F5A}.Release|x86.ActiveCfg = Release|Any CPU
 		{0FFBE211-D608-462A-9BA3-6EF51F801747}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{0FFBE211-D608-462A-9BA3-6EF51F801747}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0FFBE211-D608-462A-9BA3-6EF51F801747}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU

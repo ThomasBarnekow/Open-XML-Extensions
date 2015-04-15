@@ -35,6 +35,10 @@
     </DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="DocumentFormat.OpenXml, Version=2.5.5631.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Lib\Open-XML-SDK\DocumentFormat.OpenXml.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -63,12 +67,6 @@
     <Compile Include="Transformation\WordprocessingDocumentTransformation.cs" />
     <Compile Include="Transformation\XmlTransformations.cs" />
     <Compile Include="Transformation\XslOpenXmlTransformation.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\Open-XML-SDK\Open-XML-SDK.csproj">
-      <Project>{55FB0A8A-B816-4DC9-9BB4-4DB5B5950F5A}</Project>
-      <Name>Open-XML-SDK</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
