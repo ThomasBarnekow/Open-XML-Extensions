@@ -131,6 +131,11 @@ namespace ContractArchitect.OpenXml.Transformation
 
         #endregion Properties
 
+        public override WordprocessingDocument TransformInPlace(WordprocessingDocument wordDocument)
+        {
+            return base.TransformInPlace(wordDocument);
+        }
+
         #region Document
 
         /// <summary>
@@ -148,23 +153,23 @@ namespace ContractArchitect.OpenXml.Transformation
         /// <see cref="OpenXmlTransformation{TDocument}.TransformInPlace" />
         /// method.
         /// </remarks>
-        /// <param name="packageDocument">The <see cref="WordprocessingDocument" /> to be transformed in-place.</param>
+        /// <param name="wordDocument">The <see cref="WordprocessingDocument" /> to be transformed in-place.</param>
         /// <returns>The transformed <see cref="WordprocessingDocument" />.</returns>
-        protected WordprocessingDocument TransformDocument(WordprocessingDocument packageDocument)
+        protected WordprocessingDocument TransformDocument(WordprocessingDocument wordDocument)
         {
-            var part = packageDocument.MainDocumentPart;
+            var part = wordDocument.MainDocumentPart;
             if (part != null)
             {
-                part.Document = (Document) TransformDocument(part.Document, packageDocument);
+                part.Document = (Document) TransformDocument(part.Document, wordDocument);
                 part.Document.Save();
             }
             else
             {
-                part = packageDocument.AddMainDocumentPart();
-                part.Document = CreateDocument(packageDocument);
+                part = wordDocument.AddMainDocumentPart();
+                part.Document = CreateDocument(wordDocument);
                 part.Document.Save();
             }
-            return packageDocument;
+            return wordDocument;
         }
 
         /// <summary>
@@ -176,9 +181,9 @@ namespace ContractArchitect.OpenXml.Transformation
         /// a deep clone of the <see cref="OpenXmlElement" />.
         /// </remarks>
         /// <param name="element">The <see cref="OpenXmlElement" /> to be transformed.</param>
-        /// <param name="packageDocument">The <see cref="WordprocessingDocument" /> to be transformed in-place.</param>
+        /// <param name="wordDocument">The <see cref="WordprocessingDocument" /> to be transformed in-place.</param>
         /// <returns>The transformed <see cref="OpenXmlElement" />.</returns>
-        protected virtual object TransformDocument(OpenXmlElement element, WordprocessingDocument packageDocument)
+        protected virtual object TransformDocument(OpenXmlElement element, WordprocessingDocument wordDocument)
         {
             return element.CloneNode(true);
         }
@@ -192,9 +197,9 @@ namespace ContractArchitect.OpenXml.Transformation
         /// <see cref="Document" /> tree in case the <see cref="MainDocumentPart" />
         /// was previously empty.
         /// </remarks>
-        /// <param name="packageDocument">The <see cref="WordprocessingDocument" /> to be transformed.</param>
+        /// <param name="wordDocument">The <see cref="WordprocessingDocument" /> to be transformed.</param>
         /// <returns>A new instance of <see cref="Document" />.</returns>
-        protected virtual Document CreateDocument(WordprocessingDocument packageDocument)
+        protected virtual Document CreateDocument(WordprocessingDocument wordDocument)
         {
             return new Document(new Body());
         }
@@ -223,19 +228,19 @@ namespace ContractArchitect.OpenXml.Transformation
         /// <see cref="OpenXmlTransformation{TDocument}.TransformInPlace" />
         /// method.
         /// </remarks>
-        /// <param name="packageDocument">The <see cref="WordprocessingDocument" /> to be transformed in-place.</param>
+        /// <param name="wordDocument">The <see cref="WordprocessingDocument" /> to be transformed in-place.</param>
         /// <returns>The transformed <see cref="WordprocessingDocument" />.</returns>
-        protected WordprocessingDocument TransformStyles(WordprocessingDocument packageDocument)
+        protected WordprocessingDocument TransformStyles(WordprocessingDocument wordDocument)
         {
             // Transform the StyleDefinitionsPart's root element.
-            var part = packageDocument.MainDocumentPart.StyleDefinitionsPart;
+            var part = wordDocument.MainDocumentPart.StyleDefinitionsPart;
             if (part != null)
             {
                 // The WordprocessingDocument has a StyleDefinitionsPart.
                 // So, we transform its root element and either replace the existing
                 // root element or, if the transformation results in a null element,
                 // delete the StyleDefinitionsPart.
-                var styles = (Styles) TransformStyles(part.Styles, packageDocument);
+                var styles = (Styles) TransformStyles(part.Styles, wordDocument);
                 if (styles != null)
                 {
                     part.Styles = styles;
@@ -243,7 +248,7 @@ namespace ContractArchitect.OpenXml.Transformation
                 }
                 else
                 {
-                    packageDocument.MainDocumentPart.DeletePart(part);
+                    wordDocument.MainDocumentPart.DeletePart(part);
                     part = null;
                 }
             }
@@ -252,30 +257,30 @@ namespace ContractArchitect.OpenXml.Transformation
                 // The WordprocessingDocument does not have a StyleDefinitionsPart.
                 // If the transformation produces a non-null root element, we add a new
                 // StyleDefinitionsPart with that root element.
-                var styles = CreateStyles(packageDocument);
+                var styles = CreateStyles(wordDocument);
                 if (styles != null)
                 {
-                    part = packageDocument.MainDocumentPart.AddNewPart<StyleDefinitionsPart>();
+                    part = wordDocument.MainDocumentPart.AddNewPart<StyleDefinitionsPart>();
                     part.Styles = styles;
                     part.Styles.Save();
                 }
             }
 
             // Make sure the StylesWithEffectPart equals the StyleDefinitionsPart.
-            var effectsPart = packageDocument.MainDocumentPart.StylesWithEffectsPart;
+            var effectsPart = wordDocument.MainDocumentPart.StylesWithEffectsPart;
             if (part != null)
             {
                 if (effectsPart == null)
-                    effectsPart = packageDocument.MainDocumentPart.AddNewPart<StylesWithEffectsPart>();
+                    effectsPart = wordDocument.MainDocumentPart.AddNewPart<StylesWithEffectsPart>();
                 effectsPart.Styles = (Styles) part.Styles.CloneNode(true);
                 effectsPart.Styles.Save();
             }
             else if (effectsPart != null)
             {
-                packageDocument.MainDocumentPart.DeletePart(effectsPart);
+                wordDocument.MainDocumentPart.DeletePart(effectsPart);
             }
 
-            return packageDocument;
+            return wordDocument;
         }
 
         /// <summary>
@@ -287,9 +292,9 @@ namespace ContractArchitect.OpenXml.Transformation
         /// implementation produces a deep clone of the <see cref="OpenXmlElement" />.
         /// </remarks>
         /// <param name="element">The <see cref="OpenXmlElement" /> to be transformed.</param>
-        /// <param name="packageDocument">The <see cref="WordprocessingDocument" /> to be transformed.</param>
+        /// <param name="wordDocument">The <see cref="WordprocessingDocument" /> to be transformed.</param>
         /// <returns>The transformed <see cref="OpenXmlElement" />.</returns>
-        protected virtual object TransformStyles(OpenXmlElement element, WordprocessingDocument packageDocument)
+        protected virtual object TransformStyles(OpenXmlElement element, WordprocessingDocument wordDocument)
         {
             return element.CloneNode(true);
         }
@@ -303,9 +308,9 @@ namespace ContractArchitect.OpenXml.Transformation
         /// It can be overridden by subclasses wishing to create a specific <see cref="Styles" />
         /// tree. If null is returned, the <see cref="StyleDefinitionsPart" /> will not be created.
         /// </remarks>
-        /// <param name="packageDocument">The <see cref="WordprocessingDocument" /> to be transformed.</param>
+        /// <param name="wordDocument">The <see cref="WordprocessingDocument" /> to be transformed.</param>
         /// <returns>A new instance of <see cref="Styles" /> or null.</returns>
-        protected virtual Styles CreateStyles(WordprocessingDocument packageDocument)
+        protected virtual Styles CreateStyles(WordprocessingDocument wordDocument)
         {
             return null;
         }
@@ -331,14 +336,14 @@ namespace ContractArchitect.OpenXml.Transformation
         /// <see cref="OpenXmlTransformation{TDocument}.TransformInPlace" />
         /// method.
         /// </remarks>
-        /// <param name="packageDocument">The <see cref="WordprocessingDocument" /> to be transformed in-place.</param>
+        /// <param name="wordDocument">The <see cref="WordprocessingDocument" /> to be transformed in-place.</param>
         /// <returns>The transformed <see cref="WordprocessingDocument" />.</returns>
-        protected WordprocessingDocument TransformNumbering(WordprocessingDocument packageDocument)
+        protected WordprocessingDocument TransformNumbering(WordprocessingDocument wordDocument)
         {
-            var part = packageDocument.MainDocumentPart.NumberingDefinitionsPart;
+            var part = wordDocument.MainDocumentPart.NumberingDefinitionsPart;
             if (part != null)
             {
-                var numbering = (Numbering) TransformNumbering(part.Numbering, packageDocument);
+                var numbering = (Numbering) TransformNumbering(part.Numbering, wordDocument);
                 if (numbering != null)
                 {
                     part.Numbering = numbering;
@@ -346,20 +351,20 @@ namespace ContractArchitect.OpenXml.Transformation
                 }
                 else
                 {
-                    packageDocument.MainDocumentPart.DeletePart(part);
+                    wordDocument.MainDocumentPart.DeletePart(part);
                 }
             }
             else
             {
-                var numbering = CreateNumbering(packageDocument);
+                var numbering = CreateNumbering(wordDocument);
                 if (numbering != null)
                 {
-                    part = packageDocument.MainDocumentPart.AddNewPart<NumberingDefinitionsPart>();
+                    part = wordDocument.MainDocumentPart.AddNewPart<NumberingDefinitionsPart>();
                     part.Numbering = numbering;
                     part.Numbering.Save();
                 }
             }
-            return packageDocument;
+            return wordDocument;
         }
 
         /// <summary>
@@ -371,9 +376,9 @@ namespace ContractArchitect.OpenXml.Transformation
         /// implementation just produces a deep clone of the <see cref="OpenXmlElement" />.
         /// </remarks>
         /// <param name="element">The <see cref="OpenXmlElement" /> to be transformed.</param>
-        /// <param name="packageDocument">The <see cref="WordprocessingDocument" /> to be transformed.</param>
+        /// <param name="wordDocument">The <see cref="WordprocessingDocument" /> to be transformed.</param>
         /// <returns>The transformed <see cref="OpenXmlElement" />.</returns>
-        protected virtual object TransformNumbering(OpenXmlElement element, WordprocessingDocument packageDocument)
+        protected virtual object TransformNumbering(OpenXmlElement element, WordprocessingDocument wordDocument)
         {
             return element.CloneNode(true);
         }
@@ -387,9 +392,9 @@ namespace ContractArchitect.OpenXml.Transformation
         /// It can be overridden by subclasses wishing to create a specific <see cref="Numbering" />
         /// tree. If null is returned, the <see cref="NumberingDefinitionsPart" /> will not be created.
         /// </remarks>
-        /// <param name="packageDocument">The <see cref="WordprocessingDocument" /> to be transformed.</param>
+        /// <param name="wordDocument">The <see cref="WordprocessingDocument" /> to be transformed.</param>
         /// <returns>A new instance of <see cref="Numbering" /> or null.</returns>
-        protected virtual Numbering CreateNumbering(WordprocessingDocument packageDocument)
+        protected virtual Numbering CreateNumbering(WordprocessingDocument wordDocument)
         {
             return null;
         }
@@ -398,12 +403,12 @@ namespace ContractArchitect.OpenXml.Transformation
 
         #region Headers
 
-        protected WordprocessingDocument TransformHeaders(WordprocessingDocument packageDocument)
+        protected WordprocessingDocument TransformHeaders(WordprocessingDocument wordDocument)
         {
-            var parts = packageDocument.MainDocumentPart.HeaderParts.ToList();
+            var parts = wordDocument.MainDocumentPart.HeaderParts.ToList();
             foreach (var part in parts)
             {
-                var header = (Header) TransformHeader(part.Header, packageDocument);
+                var header = (Header) TransformHeader(part.Header, wordDocument);
                 if (header != null)
                 {
                     part.Header = header;
@@ -411,13 +416,13 @@ namespace ContractArchitect.OpenXml.Transformation
                 }
                 else
                 {
-                    packageDocument.MainDocumentPart.DeletePart(part);
+                    wordDocument.MainDocumentPart.DeletePart(part);
                 }
             }
-            return packageDocument;
+            return wordDocument;
         }
 
-        protected virtual object TransformHeader(OpenXmlElement element, WordprocessingDocument packageDocument)
+        protected virtual object TransformHeader(OpenXmlElement element, WordprocessingDocument wordDocument)
         {
             return element.CloneNode(true);
         }
@@ -426,12 +431,12 @@ namespace ContractArchitect.OpenXml.Transformation
 
         #region Footers
 
-        protected WordprocessingDocument TransformFooters(WordprocessingDocument packageDocument)
+        protected WordprocessingDocument TransformFooters(WordprocessingDocument wordDocument)
         {
-            var parts = packageDocument.MainDocumentPart.FooterParts.ToList();
+            var parts = wordDocument.MainDocumentPart.FooterParts.ToList();
             foreach (var part in parts)
             {
-                var footer = (Footer) TransformFooter(part.Footer, packageDocument);
+                var footer = (Footer) TransformFooter(part.Footer, wordDocument);
                 if (footer != null)
                 {
                     part.Footer = footer;
@@ -439,13 +444,13 @@ namespace ContractArchitect.OpenXml.Transformation
                 }
                 else
                 {
-                    packageDocument.MainDocumentPart.DeletePart(part);
+                    wordDocument.MainDocumentPart.DeletePart(part);
                 }
             }
-            return packageDocument;
+            return wordDocument;
         }
 
-        protected virtual object TransformFooter(OpenXmlElement element, WordprocessingDocument packageDocument)
+        protected virtual object TransformFooter(OpenXmlElement element, WordprocessingDocument wordDocument)
         {
             return element.CloneNode(true);
         }
