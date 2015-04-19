@@ -22,7 +22,6 @@
  */
 
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
@@ -50,7 +49,6 @@ namespace ContractArchitect.OpenXml.Transformation
         /// <summary>
         /// Gets or sets the template <see cref="WordprocessingDocument" />.
         /// </summary>
-        [SuppressMessage("ReSharper", "NotResolvedInText")]
         public virtual WordprocessingDocument Template
         {
             get { return _template; }
@@ -69,7 +67,7 @@ namespace ContractArchitect.OpenXml.Transformation
                     value.MainDocumentPart.Document == null ||
                     value.MainDocumentPart.Document.Body == null)
                 {
-                    throw new ArgumentException("Illegal WordprocessingDocument", "Template");
+                    throw new ArgumentException("Illegal WordprocessingDocument", "value");
                 }
 
                 if (value.DocumentType == WordprocessingDocumentType.Document ||
@@ -91,7 +89,7 @@ namespace ContractArchitect.OpenXml.Transformation
         /// <summary>
         /// Gets the template's w:body element. Returns null if no template was specified.
         /// </summary>
-        protected virtual Body TemplateBody
+        protected Body TemplateBody
         {
             get
             {
@@ -103,7 +101,7 @@ namespace ContractArchitect.OpenXml.Transformation
         /// Gets the template's w:styles element. Returns null if no template was specified
         /// or there is no w:styles element.
         /// </summary>
-        protected virtual Styles TemplateStyles
+        protected Styles TemplateStyles
         {
             get
             {
@@ -118,7 +116,7 @@ namespace ContractArchitect.OpenXml.Transformation
         /// Gets the template's w:numbering element. Returns null if no template was specified
         /// or there is no w:numbering element.
         /// </summary>
-        protected virtual Numbering TemplateNumbering
+        protected Numbering TemplateNumbering
         {
             get
             {
@@ -161,13 +159,13 @@ namespace ContractArchitect.OpenXml.Transformation
             if (part != null)
             {
                 part.Document = (Document) TransformDocument(part.Document, wordDocument);
-                part.Document.Save();
+                //part.Document.Save();
             }
             else
             {
                 part = wordDocument.AddMainDocumentPart();
                 part.Document = CreateDocument(wordDocument);
-                part.Document.Save();
+                //part.Document.Save();
             }
             return wordDocument;
         }
@@ -244,7 +242,7 @@ namespace ContractArchitect.OpenXml.Transformation
                 if (styles != null)
                 {
                     part.Styles = styles;
-                    part.Styles.Save();
+                    //part.Styles.Save();
                 }
                 else
                 {
@@ -262,7 +260,7 @@ namespace ContractArchitect.OpenXml.Transformation
                 {
                     part = wordDocument.MainDocumentPart.AddNewPart<StyleDefinitionsPart>();
                     part.Styles = styles;
-                    part.Styles.Save();
+                    //part.Styles.Save();
                 }
             }
 
@@ -273,7 +271,7 @@ namespace ContractArchitect.OpenXml.Transformation
                 if (effectsPart == null)
                     effectsPart = wordDocument.MainDocumentPart.AddNewPart<StylesWithEffectsPart>();
                 effectsPart.Styles = (Styles) part.Styles.CloneNode(true);
-                effectsPart.Styles.Save();
+                //effectsPart.Styles.Save();
             }
             else if (effectsPart != null)
             {
@@ -347,7 +345,7 @@ namespace ContractArchitect.OpenXml.Transformation
                 if (numbering != null)
                 {
                     part.Numbering = numbering;
-                    part.Numbering.Save();
+                    //part.Numbering.Save();
                 }
                 else
                 {
@@ -361,7 +359,7 @@ namespace ContractArchitect.OpenXml.Transformation
                 {
                     part = wordDocument.MainDocumentPart.AddNewPart<NumberingDefinitionsPart>();
                     part.Numbering = numbering;
-                    part.Numbering.Save();
+                    //part.Numbering.Save();
                 }
             }
             return wordDocument;
@@ -412,7 +410,7 @@ namespace ContractArchitect.OpenXml.Transformation
                 if (header != null)
                 {
                     part.Header = header;
-                    part.Header.Save();
+                    //part.Header.Save();
                 }
                 else
                 {
@@ -440,7 +438,7 @@ namespace ContractArchitect.OpenXml.Transformation
                 if (footer != null)
                 {
                     part.Footer = footer;
-                    part.Footer.Save();
+                    //part.Footer.Save();
                 }
                 else
                 {
