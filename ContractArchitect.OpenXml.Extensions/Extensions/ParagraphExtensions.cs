@@ -24,6 +24,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 
@@ -145,6 +146,23 @@ namespace ContractArchitect.OpenXml.Extensions
                 return !isUnderlineTurnedOff;
             }
             return paragraph.Descendants<Run>().All(r => r.IsUnderlineSingle(document));
+        }
+
+        public static Type GetRunTrackChangeType(this Paragraph paragraph)
+        {
+            if (paragraph == null)
+                throw new ArgumentNullException("paragraph");
+
+            return paragraph.RunsAreTrackChangeType<RunTrackChangeType>()
+                ? paragraph.Descendants<Run>().First().Parent.GetType()
+                : null;
+        }
+
+        public static bool RunsAreTrackChangeType<T>(this Paragraph paragraph) where T : RunTrackChangeType
+        {
+            return paragraph != null &&
+                   paragraph.Descendants<Run>().Any() &&
+                   paragraph.Descendants<Run>().All(run => run.Parent is T);
         }
 
         #region Trimming
