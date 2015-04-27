@@ -92,11 +92,11 @@ namespace ContractArchitect.OpenXml.Transformation
     /// XML documents. All methods will perform the exact same transformation and only take
     /// the input in different formats.
     /// </summary>
-    /// <seealso cref="FlatOpcStringToXmlTransform{DocumentType}" />
-    /// <seealso cref="FlatOpcDocumentToXmlTransform{DocumentType}" />
-    /// <seealso cref="OpenXmlPackageToXmlTransform{DocumentType}" />
+    /// <seealso cref="FlatOpcStringToXmlTransformation{TDocument}" />
+    /// <seealso cref="FlatOpcDocumentToXmlTransformation{TDocument}" />
+    /// <seealso cref="OpenXmlPackageToXmlTransformation{TDocument}" />
     /// <typeparam name="TDocument">A subclass of <see cref="OpenXmlPackage" />.</typeparam>
-    public interface IOpenXmlToXmlTransform<in TDocument>
+    public interface IOpenXmlToXmlTransformation<in TDocument>
         where TDocument : OpenXmlPackage
     {
         XDocument ToXml(string text);
@@ -110,7 +110,7 @@ namespace ContractArchitect.OpenXml.Transformation
     /// representation of an Open XML package.
     /// </summary>
     /// <typeparam name="TDocument">A subclass of <see cref="OpenXmlPackage" />.</typeparam>
-    public abstract class FlatOpcStringToXmlTransform<TDocument> : IOpenXmlToXmlTransform<TDocument>
+    public abstract class FlatOpcStringToXmlTransformation<TDocument> : IOpenXmlToXmlTransformation<TDocument>
         where TDocument : OpenXmlPackage
     {
         public abstract XDocument ToXml(string text);
@@ -132,7 +132,7 @@ namespace ContractArchitect.OpenXml.Transformation
     /// representation of an Open XML package, using the Linq to XML classes.
     /// </summary>
     /// <typeparam name="TDocument">A subclass of <see cref="OpenXmlPackage" />.</typeparam>
-    public abstract class FlatOpcDocumentToXmlTransform<TDocument> : IOpenXmlToXmlTransform<TDocument>
+    public abstract class FlatOpcDocumentToXmlTransformation<TDocument> : IOpenXmlToXmlTransformation<TDocument>
         where TDocument : OpenXmlPackage
     {
         public XDocument ToXml(string text)
@@ -154,7 +154,7 @@ namespace ContractArchitect.OpenXml.Transformation
     /// <see cref="OpenXmlPackage" />, using the Open XML SDK.
     /// </summary>
     /// <typeparam name="TDocument">A subclass of <see cref="OpenXmlPackage" />.</typeparam>
-    public abstract class OpenXmlPackageToXmlTransform<TDocument> : IOpenXmlToXmlTransform<TDocument>
+    public abstract class OpenXmlPackageToXmlTransformation<TDocument> : IOpenXmlToXmlTransformation<TDocument>
         where TDocument : OpenXmlPackage
     {
         public XDocument ToXml(string text)
