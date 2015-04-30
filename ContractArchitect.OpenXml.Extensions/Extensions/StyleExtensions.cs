@@ -21,6 +21,7 @@
  * Version: 1.0.01
  */
 
+using System;
 using System.Linq;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Wordprocessing;
@@ -33,6 +34,16 @@ namespace ContractArchitect.OpenXml.Extensions
         public const string DefaultCharacterStyleId = "DefaultParagraphFont";
         public const string DefaultParagraphStyleId = "Normal";
 
+        public static Style GetBaseStyle(this Style style)
+        {
+            if (style == null)
+                throw new ArgumentNullException("style");
+
+            return style.BasedOn != null
+                ? style.Parent.Elements<Style>().FirstOrDefault(e => e.StyleId.Value == style.BasedOn.Val.Value)
+                : null;
+        }
+
         public static T GetLeafElement<T>(this Style style)
             where T : OpenXmlLeafElement
         {
@@ -41,10 +52,7 @@ namespace ContractArchitect.OpenXml.Extensions
             var leaf = style.Descendants<T>().FirstOrDefault();
             if (leaf != null) return leaf;
 
-            if (style.BasedOn == null) return null;
-
-            var baseStyle = style.Parent.Elements<Style>()
-                .FirstOrDefault(e => e.StyleId.Value == style.BasedOn.Val.Value);
+            var baseStyle = style.GetBaseStyle();
 
             return baseStyle != null ? baseStyle.GetLeafElement<T>() : null;
         }
@@ -56,6 +64,18 @@ namespace ContractArchitect.OpenXml.Extensions
             if (onOffElement == null) return null;
 
             return onOffElement.Val ?? new OnOffValue(true);
+        }
+
+        public static int GetOutlineLevel(this Style style)
+        {
+            if (style == null) return BodyTextOutlineLevel;
+
+            if (style.StyleParagraphProperties != null && style.StyleParagraphProperties.OutlineLevel != null)
+                return style.StyleParagraphProperties.OutlineLevel.Val + 1;
+
+            var baseStyle = style.GetBaseStyle();
+
+            return baseStyle != null ? baseStyle.GetOutlineLevel() : BodyTextOutlineLevel;
         }
 
         public static bool Is<T>(this Style style)

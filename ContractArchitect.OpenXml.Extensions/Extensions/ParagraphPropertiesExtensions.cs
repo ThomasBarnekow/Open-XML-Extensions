@@ -93,6 +93,11 @@ namespace ContractArchitect.OpenXml.Extensions
             return pPr.ParagraphStyleId.Val.Value;
         }
 
+        public static bool HasStyleSeparator(this ParagraphProperties pPr)
+        {
+            return pPr != null && pPr.Descendants<SpecVanish>().Any();
+        }
+
         public static bool IsKeepNext(this ParagraphProperties pPr, WordprocessingDocument document)
         {
             if (pPr == null) return false;

@@ -24,13 +24,13 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace ContractArchitect.OpenXml.Extensions
 {
     /// <summary>
+    /// Provides various extensions of the <see cref="Paragraph" /> class.
     /// </summary>
     [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
@@ -82,12 +82,7 @@ namespace ContractArchitect.OpenXml.Extensions
             if (document == null)
                 throw new ArgumentNullException("document");
 
-            var style = document.GetParagraphStyle(paragraph.GetParagraphStyleId());
-            if (style != null && style.StyleParagraphProperties != null &&
-                style.StyleParagraphProperties.OutlineLevel != null)
-                return style.StyleParagraphProperties.OutlineLevel.Val + 1;
-
-            return StyleExtensions.BodyTextOutlineLevel;
+            return document.GetParagraphStyle(paragraph.GetParagraphStyleId()).GetOutlineLevel();
         }
 
         public static Style GetParagraphStyle(this Paragraph paragraph, WordprocessingDocument document)
@@ -106,6 +101,24 @@ namespace ContractArchitect.OpenXml.Extensions
                 throw new ArgumentNullException("paragraph");
 
             return paragraph.ParagraphProperties.GetParagraphStyleId();
+        }
+
+        public static Type GetRunTrackChangeType(this Paragraph paragraph)
+        {
+            if (paragraph == null)
+                throw new ArgumentNullException("paragraph");
+
+            return paragraph.RunsAreTrackChangeType<RunTrackChangeType>()
+                ? paragraph.Descendants<Run>().First().Parent.GetType()
+                : null;
+        }
+
+        public static bool HasStyleSeparator(this Paragraph paragraph)
+        {
+            if (paragraph == null)
+                throw new ArgumentNullException("paragraph");
+
+            return paragraph.ParagraphProperties.HasStyleSeparator();
         }
 
         public static bool Is<T>(this Paragraph paragraph, WordprocessingDocument document)
@@ -146,16 +159,6 @@ namespace ContractArchitect.OpenXml.Extensions
                 return !isUnderlineTurnedOff;
             }
             return paragraph.Descendants<Run>().All(r => r.IsUnderlineSingle(document));
-        }
-
-        public static Type GetRunTrackChangeType(this Paragraph paragraph)
-        {
-            if (paragraph == null)
-                throw new ArgumentNullException("paragraph");
-
-            return paragraph.RunsAreTrackChangeType<RunTrackChangeType>()
-                ? paragraph.Descendants<Run>().First().Parent.GetType()
-                : null;
         }
 
         public static bool RunsAreTrackChangeType<T>(this Paragraph paragraph) where T : RunTrackChangeType

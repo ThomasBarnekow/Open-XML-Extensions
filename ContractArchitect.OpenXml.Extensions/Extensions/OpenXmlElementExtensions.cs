@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Linq;
 using DocumentFormat.OpenXml;
 
 namespace ContractArchitect.OpenXml.Extensions
@@ -141,6 +142,11 @@ namespace ContractArchitect.OpenXml.Extensions
             var transformedElement = (T) element.CloneNode(false);
             transformedElement.Append(element.Elements().SelectResultsOf(transformation));
             return transformedElement;
+        }
+
+        public static XElement ToXElement(this OpenXmlElement element)
+        {
+            return element != null ? XElement.Parse(element.OuterXml) : null;
         }
     }
 }
