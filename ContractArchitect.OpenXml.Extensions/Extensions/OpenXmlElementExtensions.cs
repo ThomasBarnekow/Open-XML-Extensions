@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace ContractArchitect.OpenXml.Extensions
 {
@@ -108,6 +109,11 @@ namespace ContractArchitect.OpenXml.Extensions
             return oldChild != null ? element.ReplaceChild(newChild, oldChild) : element.AppendChild(newChild);
         }
 
+        public static XElement ToXElement(this OpenXmlElement element)
+        {
+            return element != null ? XElement.Parse(element.OuterXml) : null;
+        }
+
         /// <summary>
         /// Performs a transformation of the given element and its descendants, creating a shallow
         /// clone of the element and applying the given transformation to its elements.
@@ -144,9 +150,133 @@ namespace ContractArchitect.OpenXml.Extensions
             return transformedElement;
         }
 
-        public static XElement ToXElement(this OpenXmlElement element)
+        #region Logical Children Content
+        // Source: http://blogs.msdn.com/b/ericwhite/archive/2010/01/12/logicalchildrencontent-axis-methods-open-xml-sdk-v2-strongly-typed-object-model.aspx
+
+        public static IEnumerable<OpenXmlElement> DescendantsTrimmed(this OpenXmlElement element, Type trimType)
         {
-            return element != null ? XElement.Parse(element.OuterXml) : null;
+            return DescendantsTrimmed(element, e => e.GetType() == trimType);
         }
+
+        private static IEnumerable<OpenXmlElement> DescendantsTrimmed(this OpenXmlElement element,
+            Func<OpenXmlElement, bool> predicate)
+        {
+            var iteratorStack = new Stack<IEnumerator<OpenXmlElement>>();
+            iteratorStack.Push(element.Elements().GetEnumerator());
+            while (iteratorStack.Count > 0)
+            {
+                while (iteratorStack.Peek().MoveNext())
+                {
+                    var currentOpenXmlElement = iteratorStack.Peek().Current;
+                    if (predicate(currentOpenXmlElement))
+                    {
+                        yield return currentOpenXmlElement;
+                        continue;
+                    }
+                    yield return currentOpenXmlElement;
+                    iteratorStack.Push(currentOpenXmlElement.Elements().GetEnumerator());
+                }
+                iteratorStack.Pop();
+            }
+        }
+
+        private static readonly Type[] SubRunLevelContent =
+        {
+            typeof (Break),
+            typeof (CarriageReturn),
+            typeof (DayLong),
+            typeof (DayShort),
+            typeof (Drawing),
+            typeof (MonthLong),
+            typeof (MonthShort),
+            typeof (NoBreakHyphen),
+            typeof (PageNumber),
+            typeof (Picture),
+            typeof (PositionalTab),
+            typeof (SoftHyphen),
+            typeof (SymbolChar),
+            typeof (TabChar),
+            typeof (Text),
+            typeof (YearLong),
+            typeof (YearShort),
+            typeof (AlternateContent)
+        };
+
+        public static IEnumerable<OpenXmlElement> LogicalChildrenContent(this OpenXmlElement element)
+        {
+            if (element is Document)
+                return element.Descendants<Body>().Take(1);
+
+            if (element is Body ||
+                element is TableCell ||
+                element is TextBoxContent)
+                return element
+                    .DescendantsTrimmed(e =>
+                        e is Table ||
+                        e is Paragraph)
+                    .Where(e =>
+                        e is Paragraph ||
+                        e is Table);
+
+            if (element is Table)
+                return element
+                    .DescendantsTrimmed(typeof (TableRow))
+                    .Where(e => e is TableRow);
+
+            if (element is TableRow)
+                return element
+                    .DescendantsTrimmed(typeof (TableCell))
+                    .Where(e => e is TableCell);
+
+            if (element is Paragraph)
+                return element
+                    .DescendantsTrimmed(e => e is Run ||
+                                             e is Picture ||
+                                             e is Drawing)
+                    .Where(e => e is Run ||
+                                e is Picture ||
+                                e is Drawing);
+
+            if (element is Run)
+                return element
+                    .DescendantsTrimmed(e => SubRunLevelContent.Contains(e.GetType()))
+                    .Where(e => SubRunLevelContent.Contains(e.GetType()));
+
+            if (element is AlternateContent)
+                return element
+                    .DescendantsTrimmed(e =>
+                        e is Picture ||
+                        e is Drawing ||
+                        e is AlternateContentFallback)
+                    .Where(e =>
+                        e is Picture ||
+                        e is Drawing);
+
+            if (element is Picture || element is Drawing)
+                return element
+                    .DescendantsTrimmed(typeof (TextBoxContent))
+                    .Where(e => e is TextBoxContent);
+
+            return new OpenXmlElement[] { };
+        }
+
+        public static IEnumerable<OpenXmlElement> LogicalChildrenContent(this IEnumerable<OpenXmlElement> source)
+        {
+            return source.SelectMany(e1 => e1.LogicalChildrenContent());
+        }
+
+        public static IEnumerable<OpenXmlElement> LogicalChildrenContent(this OpenXmlElement element,
+            Type typeName)
+        {
+            return element.LogicalChildrenContent().Where(e => e.GetType() == typeName);
+        }
+
+        public static IEnumerable<OpenXmlElement> LogicalChildrenContent(this IEnumerable<OpenXmlElement> source,
+            Type typeName)
+        {
+            return source.SelectMany(e => e.LogicalChildrenContent(typeName));
+        }
+
+        #endregion
     }
 }

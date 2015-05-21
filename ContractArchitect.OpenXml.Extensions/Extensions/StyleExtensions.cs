@@ -24,6 +24,7 @@
 using System;
 using System.Linq;
 using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace ContractArchitect.OpenXml.Extensions
@@ -44,6 +45,46 @@ namespace ContractArchitect.OpenXml.Extensions
                 : null;
         }
 
+        public static int GetIndentationLeft(this Style style, WordprocessingDocument document)
+        {
+            if (style == null) return 0;
+
+            var pPr = style.StyleParagraphProperties;
+            if (pPr == null)
+                return style.GetBaseStyle().GetIndentationLeft(document);
+
+            var ind = pPr.Indentation;
+            if (ind != null && ind.Left != null)
+                return int.Parse(ind.Left.Value);
+
+            var numPr = pPr.NumberingProperties;
+            return numPr != null
+                ? numPr.GetIndentationLeft(document)
+                : style.GetBaseStyle().GetIndentationLeft(document);
+        }
+
+        public static NumberingProperties GetNumberingProperties(this Style style)
+        {
+            return style != null && style.StyleParagraphProperties != null
+                ? style.StyleParagraphProperties.NumberingProperties
+                : null;
+        }
+
+        public static string GetNumberingText(this Style style, NumberingState numberingState,
+            WordprocessingDocument document)
+        {
+            if (style == null) return string.Empty;
+
+            var pPr = style.StyleParagraphProperties;
+            if (pPr == null)
+                return style.GetBaseStyle().GetNumberingText(numberingState, document);
+
+            var numPr = pPr.NumberingProperties;
+            return numPr != null
+                ? numPr.GetNumberingText(numberingState, document)
+                : style.GetBaseStyle().GetNumberingText(numberingState, document);
+        }
+
         public static T GetLeafElement<T>(this Style style)
             where T : OpenXmlLeafElement
         {
@@ -57,7 +98,7 @@ namespace ContractArchitect.OpenXml.Extensions
             return baseStyle != null ? baseStyle.GetLeafElement<T>() : null;
         }
 
-        public static OnOffValue GetOnOffValue<T>(this Style style) 
+        public static OnOffValue GetOnOffValue<T>(this Style style)
             where T : OnOffType
         {
             var onOffElement = style.GetLeafElement<T>();

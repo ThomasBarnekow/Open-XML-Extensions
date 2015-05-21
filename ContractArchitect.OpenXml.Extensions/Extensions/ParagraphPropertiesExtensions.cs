@@ -22,6 +22,7 @@
  */
 
 using System;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using DocumentFormat.OpenXml;
@@ -53,6 +54,38 @@ namespace ContractArchitect.OpenXml.Extensions
             return StyleExtensions.DefaultCharacterStyleId;
         }
 
+        public static int GetIndentationLeft(this ParagraphProperties pPr, WordprocessingDocument document)
+        {
+            if (pPr == null) return 0;
+
+            var ind = pPr.Indentation;
+            if (ind != null && ind.Left != null)
+                return int.Parse(ind.Left.Value);
+
+            var numPr = pPr.NumberingProperties;
+            return numPr != null
+                ? numPr.GetIndentationLeft(document)
+                : pPr.GetParagraphStyle(document).GetIndentationLeft(document);
+        }
+
+        public static NumberingProperties GetNumberingProperties(this ParagraphProperties pPr, WordprocessingDocument document)
+        {
+            if (pPr == null) return null;
+
+            return pPr.NumberingProperties ?? pPr.GetParagraphStyle(document).GetNumberingProperties();
+        }
+
+        public static string GetNumberingText(this ParagraphProperties pPr, NumberingState numberingState,
+            WordprocessingDocument document)
+        {
+            if (pPr == null) return string.Empty;
+
+            var numPr = pPr.NumberingProperties;
+            return numPr != null
+                ? numPr.GetNumberingText(numberingState, document)
+                : pPr.GetParagraphStyle(document).GetNumberingText(numberingState, document);
+        }
+
         public static T GetLeafElement<T>(this ParagraphProperties pPr, WordprocessingDocument document)
             where T : OpenXmlLeafElement
         {
@@ -69,6 +102,9 @@ namespace ContractArchitect.OpenXml.Extensions
         public static OnOffValue GetOnOffValue<T>(this ParagraphProperties pPr, WordprocessingDocument document)
             where T : OnOffType
         {
+            if (pPr == null)
+                throw new ArgumentNullException("pPr");
+
             var element = pPr.Descendants<T>().FirstOrDefault();
             if (element != null)
                 return element.Val.HasValue ? element.Val : new OnOffValue(true);

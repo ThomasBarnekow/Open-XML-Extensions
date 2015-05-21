@@ -36,53 +36,79 @@ namespace ContractArchitect.OpenXml.Extensions
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public static class ParagraphExtensions
     {
+        public static int GetIndentationLeft(this Paragraph paragraph, WordprocessingDocument document)
+        {
+            if (paragraph == null)
+                throw new ArgumentNullException("paragraph");
+
+            return paragraph.ParagraphProperties.GetIndentationLeft(document);
+        }
+
         public static int GetListLevel(this Paragraph paragraph, WordprocessingDocument document)
         {
             if (paragraph == null)
                 throw new ArgumentNullException("paragraph");
-            if (document == null)
-                throw new ArgumentNullException("document");
 
-            var pPr = paragraph.ParagraphProperties;
-            if (pPr != null)
-            {
-                // Check whether paragraph has numbering properties.
-                var numPr = pPr.NumberingProperties;
-                if (numPr != null)
-                {
-                    var ilvl = numPr.NumberingLevelReference;
-                    if (ilvl != null)
-                        return ilvl.Val + 1;
-                    return 1;
-                }
-                // Check whether the style has numbering properties.
-                var style = paragraph.GetParagraphStyle(document);
-                var spPr = style.StyleParagraphProperties;
-                if (spPr != null)
-                {
-                    numPr = spPr.NumberingProperties;
-                    if (numPr != null)
-                    {
-                        var ilvl = numPr.NumberingLevelReference;
-                        if (ilvl != null)
-                            return ilvl.Val + 1;
-                        return 1;
-                    }
-                }
-            }
+            var numPr = paragraph.GetNumberingProperties(document);
+            if (numPr == null)
+                return 0;
 
-            // No numbering properties found.
-            return 0;
+            var numId = numPr.NumberingId;
+            if (numId != null && numId.Val.Value == 0)
+                return 0;
+
+            var ilvl = numPr.NumberingLevelReference;
+            if (ilvl != null)
+                return ilvl.Val + 1;
+
+            return 1;
+        }
+
+        public static int GetNumberedOutlineLevel(this Paragraph paragraph, WordprocessingDocument document)
+        {
+            if (paragraph == null)
+                throw new ArgumentNullException("paragraph");
+
+            // A paragraph without any numbering properties applied to it manually or by
+            // assigning a style shall be on the body text outline level.
+            var numPr = paragraph.GetNumberingProperties(document);
+            if (numPr == null)
+                return StyleExtensions.BodyTextOutlineLevel;
+
+            // A paragraph the numbering of which has been turned off manually shall be
+            // on the body text outline level as well.
+            var numId = numPr.NumberingId;
+            if (numId != null && numId.Val.Value == 0)
+                return StyleExtensions.BodyTextOutlineLevel;
+
+            // A numbered paragraph shall be on the outline level assigned to it by its style.
+            return paragraph.GetOutlineLevel(document);
+        }
+
+        public static NumberingProperties GetNumberingProperties(this Paragraph paragraph,
+            WordprocessingDocument document)
+        {
+            if (paragraph == null)
+                throw new ArgumentNullException("paragraph");
+
+            return paragraph.ParagraphProperties.GetNumberingProperties(document);
+        }
+
+        public static string GetNumberingText(this Paragraph paragraph, NumberingState numberingState,
+            WordprocessingDocument document)
+        {
+            if (paragraph == null)
+                throw new ArgumentNullException("paragraph");
+
+            return paragraph.ParagraphProperties.GetNumberingText(numberingState, document);
         }
 
         public static int GetOutlineLevel(this Paragraph paragraph, WordprocessingDocument document)
         {
             if (paragraph == null)
                 throw new ArgumentNullException("paragraph");
-            if (document == null)
-                throw new ArgumentNullException("document");
 
-            return document.GetParagraphStyle(paragraph.GetParagraphStyleId()).GetOutlineLevel();
+            return paragraph.GetParagraphStyle(document).GetOutlineLevel();
         }
 
         public static Style GetParagraphStyle(this Paragraph paragraph, WordprocessingDocument document)
