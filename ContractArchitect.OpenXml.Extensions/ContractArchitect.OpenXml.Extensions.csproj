@@ -42,6 +42,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\Open-XML-SDK\DocumentFormat.OpenXml.dll</HintPath>
     </Reference>
+    <Reference Include="OpenXmlPowerTools">
+      <HintPath>..\Lib\OpenXmlPowerTools\OpenXmlPowerTools.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />

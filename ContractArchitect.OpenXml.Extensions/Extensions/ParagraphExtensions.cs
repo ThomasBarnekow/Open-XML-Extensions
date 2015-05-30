@@ -153,8 +153,13 @@ namespace ContractArchitect.OpenXml.Extensions
             if (paragraph == null)
                 throw new ArgumentNullException("paragraph");
 
+            var areAllValuesTurnedOn = paragraph.Descendants<Run>()
+                .Select(r => r.GetOnOffValue<T>(document))
+                .All(val => val != null && val.Value);
+            if (areAllValuesTurnedOn) return true;
+
             var style = paragraph.GetParagraphStyle(document);
-            if (style.Is<Bold>())
+            if (style.Is<T>())
             {
                 var isAnyValueTurnedOff = paragraph.Descendants<Run>()
                     .Select(r => r.GetOnOffValue<T>(document))
