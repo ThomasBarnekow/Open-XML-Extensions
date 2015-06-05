@@ -1,0 +1,6 @@
+﻿Contract Architect Open XML Extensions
+Copyright 2014-2015 Thomas Barnekow
+
+This software includes the Open XML SDK by Microsoft Open Technologies, Inc.
+
+This software includes the PowerTools for Open XML developed by Eric White.
