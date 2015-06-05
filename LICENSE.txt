@@ -1,4 +1,7 @@
-Apache License
+Contract Architect Open XML Extensions
+Copyright 2014-2015 Thomas Barnekow
+
+                                Apache License
                            Version 2.0, January 2004
                         http://www.apache.org/licenses/
 
