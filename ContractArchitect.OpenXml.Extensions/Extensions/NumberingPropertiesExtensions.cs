@@ -62,21 +62,31 @@ namespace ContractArchitect.OpenXml.Extensions
 
         public static int GetIndentationLeft(this NumberingProperties numPr, WordprocessingDocument document)
         {
-            var abstractNum = numPr.GetEffectiveAbstractNum(document);
-            if (abstractNum == null) return 0;
-
-            var ilvlVal = numPr.GetNumberingLevelReferenceValue();
-            var lvl = abstractNum.Elements<Level>().FirstOrDefault(e => e.LevelIndex.Value == ilvlVal);
-            if (lvl == null) return 0;
-
-            var pPr = lvl.PreviousParagraphProperties;
-            if (pPr == null) return 0;
-
-            var ind = pPr.Indentation;
+            var ind = numPr.GetIndentation(document);
             if (ind != null && ind.Left != null)
                 return int.Parse(ind.Left.Value);
 
             return 0;
+        }
+
+        public static Indentation GetIndentation(this NumberingProperties numPr, WordprocessingDocument document)
+        {
+            var lvl = numPr.GetLevel(document);
+            if (lvl == null) return null;
+
+            var pPr = lvl.PreviousParagraphProperties;
+            return pPr == null ? null : pPr.Indentation;
+        }
+
+        public static Level GetLevel(this NumberingProperties numPr, WordprocessingDocument document)
+        {
+            if (numPr == null) return null;
+
+            var abstractNum = numPr.GetEffectiveAbstractNum(document);
+            if (abstractNum == null) return null;
+
+            var ilvlVal = numPr.GetNumberingLevelReferenceValue();
+            return abstractNum.Elements<Level>().FirstOrDefault(e => e.LevelIndex.Value == ilvlVal);
         }
 
         public static int GetNumberingIdValue(this NumberingProperties numPr)

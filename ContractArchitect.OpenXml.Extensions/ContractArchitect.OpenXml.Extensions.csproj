@@ -57,6 +57,7 @@
   <ItemGroup>
     <Compile Include="Extensions\CustomXmlPartExtensions.cs" />
     <Compile Include="Extensions\NumberingPropertiesExtensions.cs" />
+    <Compile Include="Extensions\OpenXmlCompositeElementExtensions.cs" />
     <Compile Include="Extensions\OpenXmlPackageExtensions.cs" />
     <Compile Include="Extensions\OpenXmlElementExtensions.cs" />
     <Compile Include="Extensions\OpenXmlPartExtensions.cs" />
