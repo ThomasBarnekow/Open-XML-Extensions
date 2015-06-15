@@ -2,5 +2,12 @@
 Copyright 2014-2015 Thomas Barnekow
 
 This software includes the Open XML SDK by Microsoft Open Technologies, Inc.
+with enhancements by Thomas Barnekow.
+See https://github.com/ThomasBarnekow/Open-XML-SDK.
 
-This software includes the PowerTools for Open XML developed by Eric White.
+Parts of this software use the PowerTools for Open XML developed by Eric White.
+See http://powertools.codeplex.com.
+
+Parts of this software use the Binary to Open XML (B2X) Translator by DIaLOGIKa
+to translate .doc to .docx files.
+See http://sourceforge.net/projects/b2xtranslator/.
