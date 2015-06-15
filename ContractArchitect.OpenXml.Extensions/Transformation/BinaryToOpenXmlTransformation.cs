@@ -31,6 +31,7 @@ using DIaLOGIKa.b2xtranslator.StructuredStorage.Reader;
 using DIaLOGIKa.b2xtranslator.Tools;
 using DIaLOGIKa.b2xtranslator.WordprocessingMLMapping;
 using DIaLOGIKa.b2xtranslator.ZipUtils;
+using DocumentFormat.OpenXml.Wordprocessing;
 using Packaging = DocumentFormat.OpenXml.Packaging;
 using OpenXmlPowerTools;
 
@@ -150,6 +151,9 @@ namespace ContractArchitect.OpenXml.Transformation
 
         #region Postprocessing
 
+        // These postprocessing methods are using Linq to XML rather than the SDK because previously we
+        // had to process non-compliant Open XML markup produced by the Binary to Open XML Translator.
+        // After having fixed the translator, the postprocessing could be streamlined.
         private static void PostprocessWordprocessingDocument(Packaging.WordprocessingDocument wordDocument)
         {
             if (wordDocument == null)
@@ -161,20 +165,6 @@ namespace ContractArchitect.OpenXml.Transformation
 
             var document = mainDocumentPart.GetRootElement();
             mainDocumentPart.SetRootElement((XElement) TransformDocument(document));
-
-            var styleDefinitionsPart = mainDocumentPart.StyleDefinitionsPart;
-            if (styleDefinitionsPart != null)
-            {
-                var styles = styleDefinitionsPart.GetRootElement();
-                styleDefinitionsPart.SetRootElement((XElement) TransformStyles(styles));
-            }
-
-            var numberingDefinitinsPart = mainDocumentPart.NumberingDefinitionsPart;
-            if (numberingDefinitinsPart != null)
-            {
-                var numbering = numberingDefinitinsPart.GetRootElement();
-                numberingDefinitinsPart.SetRootElement((XElement) TransformNumbering(numbering));
-            }
         }
 
         private static object TransformDocument(XNode node)
@@ -193,52 +183,6 @@ namespace ContractArchitect.OpenXml.Transformation
                 element.Nodes().Select(TransformDocument));
         }
 
-        private static object TransformStyles(XNode node)
-        {
-            var element = node as XElement;
-            if (element == null) return node;
-            
-            if (element.Name == W.style)
-            {
-                if ((string) element.Attribute(W.type) == "list")
-                    return new XElement(W.style,
-                        new XAttribute(W.type, "numbering"),
-                        element.Attributes().Where(a => a.Name != W.type),
-                        element.Elements());
-            }
-
-            return new XElement(element.Name, element.Attributes(),
-                element.Nodes().Select(TransformStyles));
-        }
-
-        private static object TransformNumbering(XNode node)
-        {
-            var element = node as XElement;
-            if (element == null) return node;
-
-            if (element.Name == W.pPr)
-            {
-                return new XElement(W.pPr,
-                    element.Attributes(),
-                    element.Elements().Where(e => e.Name != W.pStyle).Select(TransformNumbering));
-            }
-
-            if (element.Name == W.tab)
-            {
-                return new XElement(W.tab,
-                    TransformTabVal(element.Attribute(W.val)),
-                    element.Attributes().Where(a => a.Name != W.val));
-            }
-
-            return new XElement(element.Name, element.Attributes(),
-                element.Nodes().Select(TransformNumbering));
-        }
-
-        private static XAttribute TransformTabVal(XAttribute val)
-        {
-            return val != null && val.Value == "numTab" ? new XAttribute(W.val, "num") : val;
-        }
-
-        #endregion
+         #endregion
     }
 }
