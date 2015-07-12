@@ -223,7 +223,8 @@ namespace ContractArchitect.OpenXml.Extensions
             propertiesPart.DataStoreItem = dataStoreItem;
             propertiesPart.DataStoreItem.Save();
 
-            document.Package.Flush();
+            // Commented out after running into issues with ZipStreamManager.
+            // document.Package.Flush();
             return customXmlPart;
         }
 

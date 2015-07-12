@@ -78,6 +78,19 @@ namespace ContractArchitect.OpenXml.Transformation
         public virtual TDocument Transform(TDocument packageDocument)
         {
             return packageDocument == null ? null : TransformInPlace((TDocument) packageDocument.Clone());
+
+            // This is an option used for testing. However, I've added locks to the Clone method,
+            // So this should no longer be necessary.
+            //if (packageDocument == null)
+            //    return null;
+
+            //TDocument clone;
+            //lock (packageDocument)
+            //{
+            //    clone = (TDocument) packageDocument.Clone();
+            //}
+
+            //return TransformInPlace(clone);
         }
 
         /// <summary>
@@ -252,6 +265,19 @@ namespace ContractArchitect.OpenXml.Transformation
         public override sealed TDocument Transform(TDocument packageDocument)
         {
             return packageDocument == null ? null : TransformInPlace((TDocument) packageDocument.Clone());
+
+            // This is an option used for testing. However, I've added locks to the Clone method,
+            // So this should no longer be necessary.
+            //if (packageDocument == null)
+            //    return null;
+
+            //TDocument clone;
+            //lock (packageDocument)
+            //{
+            //    clone = (TDocument)packageDocument.Clone();
+            //}
+
+            //return TransformInPlace(clone);
         }
     }
 }

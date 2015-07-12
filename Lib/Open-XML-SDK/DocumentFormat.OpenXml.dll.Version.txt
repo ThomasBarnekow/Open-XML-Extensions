@@ -1,46 +1,69 @@
-﻿DocumentFormat.OpenXml.dll was built from commit 366f86f (vNext at the time)
-hosted at https://github.com/ThomasBarnekow/Open-XML-SDK.git.
+﻿DocumentFormat.OpenXml.dll was built from commit 7048bb (vNext at the time)
+hosted at:
+  - https://github.com/OfficeDev/Open-XML-SDK (official repository)
+  - https://github.com/ThomasBarnekow/Open-XML-SDK.git (fork)
 
-$ git log v2.5.1^..vNext
+commit 7048bb3b280fc772e5c1e52a90b8765246901c37
+Merge: 4dc2d27 df66c76
+Author: Eric White <eric@ericwhite.com>
+Date:   Tue Jul 14 19:06:20 2015 +0530
 
-commit 366f86fad2a14eae3e6d9abefe9bd390b13dbb74
+    Merge pull request #45 from ThomasBarnekow/vExtensions
+
+    Extend Open XML SDK
+
+commit df66c765cb742faa7b5f13d146ea7190da91ca95
 Author: ThomasBarnekow <thomas@barnekow.info>
-Date:   Sun Jan 18 20:56:16 2015 +0100
+Date:   Tue Jul 14 15:02:38 2015 +0200
 
-    Removed SetAssemblyVersionString.ps1 and associated pre-build event
+    Add unit tests for additional functionality
 
-commit 19e660b0353123e43289cbb6172f6bd6f8e477f3
+    Add unit tests and related test documents for the "save and clone", "Flat OPC",
+    and "create from template" functionality added to the SDK.
+
+    Correct assembly name and default namespace settings in project files. Correct
+    namespace names of existing unit tests.
+
+commit ea6962f34ac5ace89bd50c9832cd1ad323b4670e
+Author: ThomasBarnekow <thomas@barnekow.info>
+Date:   Sun Jul 12 10:26:35 2015 +0200
+
+    Add locks for saving and cloning
+
+    When cloning documents in multithreaded scenarios this typically lead to
+    exceptions thrown by the underlying System.IO.Packaging code. This commit,
+    therefore, adds locks to the Save() and Clone() methods to prevent those
+    exceptions from being thrown.
+
+commit 5e864357b0baea60556cfa2be47a3abf0a4aba82
 Author: ThomasBarnekow <thomas@barnekow.info>
 Date:   Sun Jan 18 16:18:34 2015 +0100
 
     Added XName property to OpenXmlElement and OpenXmlAttribute
 
-commit f81a4107231a24704a12ba48764973bb74e3b03d
+commit 57b2abf12204a4c1fe3642c6bbbdf30c2651b1ee
 Author: ThomasBarnekow <thomas@barnekow.info>
 Date:   Sun Jan 18 15:18:16 2015 +0100
 
     Implemented CreateFromTemplate
 
-commit 618bce0378a399d3650a26c6c1c1607382760e7b
+commit c34ca4afe9e4e53bfbefe3f0b99e4f6eb618d2c4
 Author: ThomasBarnekow <thomas@barnekow.info>
 Date:   Sun Jan 18 15:03:06 2015 +0100
 
     Implemented Flat OPC conversion
 
-commit 39def2ae3714d122e2a7e35027a1945b94e91550
+commit 06fa235a25b9bf8296c60b5f0f2fba5c54dcf61a
 Author: ThomasBarnekow <thomas@barnekow.info>
 Date:   Sun Jan 18 14:54:49 2015 +0100
 
     Implemented Save and Clone functionality
 
-commit 6a3f7935dfbeb3ed7367717659b0e48c2817c0a3
+commit 4dc2d27135ce0120108baef51ab88034a3049b23
+Merge: 0cd51e7 0ce48e3
 Author: Eric White <eric@ericwhite.com>
-Date:   Fri Jan 16 18:07:40 2015 +0530
+Date:   Tue Jul 14 15:16:48 2015 +0530
 
-    Enable building content apps for PPTX
+    Merge pull request #46 from EricWhiteDev/master
 
-commit 36112c350b065647852d6cbf52d09c7275088d8a
-Author: Eric White <eric@ericwhite.com>
-Date:   Fri Jan 16 13:07:45 2015 +0530
-
-    Add BOM to file - we want BOMs on every file for consistence
+    Add xUnit tests, clean up directory structure, throw better exceptions
