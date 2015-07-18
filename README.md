@@ -1,7 +1,16 @@
 # Open-XML-Extensions
 
-This project provides a number of extensions to the **Open XML SDK 2.5** developed by
-Microsoft and now maintained by Eric White (see https://github.com/OfficeDev/Open-XML-SDK).
+This project provides a number of extensions to the **Open XML SDK 2.6** developed by
+Microsoft and maintained by Eric White (see https://github.com/OfficeDev/Open-XML-SDK).
+The Open XML SDK also includes extensions by myself, e.g., saving and cloning, Flat
+OPC conversion, and document creation from templates.
+
+## Current Project Status
+
+<a href="https://scan.coverity.com/projects/5787">
+  <img alt="Coverity Scan Build Status"
+       src="https://scan.coverity.com/projects/5787/badge.svg"/>
+</a>
 
 ## ContractArchitect.OpenXml.Transformation
 
