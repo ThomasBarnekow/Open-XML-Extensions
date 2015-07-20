@@ -40,9 +40,11 @@ namespace ContractArchitect.OpenXml.Extensions
             if (style == null)
                 throw new ArgumentNullException("style");
 
-            return style.BasedOn != null
-                ? style.Parent.Elements<Style>().FirstOrDefault(e => e.StyleId.Value == style.BasedOn.Val.Value)
-                : null;
+            if (style.BasedOn == null)
+                return null;
+
+            var baseStyleId = style.BasedOn.Val.Value;
+            return style.Parent.Elements<Style>().FirstOrDefault(e => e.StyleId.Value == baseStyleId);
         }
 
         public static int GetIndentationLeft(this Style style, WordprocessingDocument document)

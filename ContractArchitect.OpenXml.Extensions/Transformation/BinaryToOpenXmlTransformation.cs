@@ -164,7 +164,8 @@ namespace ContractArchitect.OpenXml.Transformation
                 return;
 
             var document = mainDocumentPart.GetRootElement();
-            mainDocumentPart.SetRootElement((XElement) TransformDocument(document));
+            if (document != null)
+                mainDocumentPart.SetRootElement((XElement) TransformDocument(document));
         }
 
         private static object TransformDocument(XNode node)

@@ -30,7 +30,6 @@ using System.Xml.Linq;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.CustomXmlDataProperties;
 using DocumentFormat.OpenXml.Packaging;
-using ContractArchitect.OpenXml.Transformation;
 using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace ContractArchitect.OpenXml.Extensions
@@ -78,6 +77,9 @@ namespace ContractArchitect.OpenXml.Extensions
                 throw new ArgumentNullException("part");
 
             var customXmlRootElement = part.GetRootElement();
+            if (customXmlRootElement == null)
+                throw new ArgumentException("CustomXmlPart has no root element", "part");
+
             var storeItemId = part.CustomXmlPropertiesPart.DataStoreItem.ItemId.Value;
 
             // Bind w:sdt elements contained in main document part.
@@ -155,7 +157,7 @@ namespace ContractArchitect.OpenXml.Extensions
                     .ToDictionary(e => e.Name.LocalName, e => nsList.IndexOf(e.Name.NamespaceName));
 
                 // Build prefix mappings.
-                var prefixMappings = nsList.Select((ns, index) => new {ns, index})
+                var prefixMappings = nsList.Select((ns, index) => new { ns, index })
                     .Aggregate(new StringBuilder(), (sb, t) =>
                         sb.Append("xmlns:ns").Append(t.index).Append("='").Append(t.ns).Append("' "))
                     .ToString().Trim();
@@ -212,7 +214,7 @@ namespace ContractArchitect.OpenXml.Extensions
                 SchemaReferences = new SchemaReferences()
             };
             if (rootElement.Name.Namespace != XNamespace.None)
-                dataStoreItem.SchemaReferences.Append(new SchemaReference {Uri = rootElement.Name.NamespaceName});
+                dataStoreItem.SchemaReferences.Append(new SchemaReference { Uri = rootElement.Name.NamespaceName });
 
             // Create the custom XML part.
             var customXmlPart = document.MainDocumentPart.AddCustomXmlPart(CustomXmlPartType.CustomXml);
@@ -223,8 +225,6 @@ namespace ContractArchitect.OpenXml.Extensions
             propertiesPart.DataStoreItem = dataStoreItem;
             propertiesPart.DataStoreItem.Save();
 
-            // Commented out after running into issues with ZipStreamManager.
-            // document.Package.Flush();
             return customXmlPart;
         }
 
@@ -260,7 +260,7 @@ namespace ContractArchitect.OpenXml.Extensions
                 throw new ArgumentException("Style '" + styleId + "' already exists!", styleId);
 
             // Create a new paragraph style element and specify key attributes.
-            style = new Style {Type = StyleValues.Paragraph, CustomStyle = true, StyleId = styleId};
+            style = new Style { Type = StyleValues.Paragraph, CustomStyle = true, StyleId = styleId };
 
             // Add key child elements
             style.Produce<StyleName>().Val = styleName;
@@ -427,17 +427,20 @@ namespace ContractArchitect.OpenXml.Extensions
         }
 
         /// <summary>
-        /// Gets the last section's properties
+        /// Gets the last section's properties.
         /// </summary>
-        /// <param name="document">The document</param>
-        /// <returns>The last section's <see cref="SectionProperties" /> element</returns>
+        /// <param name="document">The document.</param>
+        /// <returns>The last section's <see cref="SectionProperties" /> element.</returns>
         public static SectionProperties GetSectionProperties(this WordprocessingDocument document)
         {
             if (document == null)
                 throw new ArgumentNullException("document");
 
-            // The body's SectionProperties element represents the last section's properties.
-            return document.MainDocumentPart.Document.Body.GetFirstChild<SectionProperties>();
+            var body = document.MainDocumentPart.Document.Body;
+            if (body == null)
+                throw new ArgumentException("Invalid WordprocessingDocument: body element is missing", "document");
+
+            return body.GetFirstChild<SectionProperties>();
         }
 
         /// <summary>
